@@ -54,6 +54,10 @@ class S3Audit extends Command {
               {
                 title: 'Bucket public access block',
                 task: () => this.checkBucketPublicAccess(bucketName)
+              },
+              {
+                title: 'Server side encryption enabled',
+                task: () => this.checkEncryptionIsEnabled(bucketName)
               }
             ], {concurrent: true});
           }
@@ -107,6 +111,20 @@ class S3Audit extends Command {
             }
           }
         ], {concurrent: true}));
+      })
+    })
+  }
+
+  private async checkEncryptionIsEnabled(bucketName: string) {
+    return new Promise((resolve, reject) => {
+      this.s3.getBucketEncryption({Bucket: bucketName}, (error: Object, data: S3.Types.GetBucketEncryptionOutput) => {
+        if (data === null || data.ServerSideEncryptionConfiguration === undefined || data.ServerSideEncryptionConfiguration.Rules[0].ApplyServerSideEncryptionByDefault === undefined) {
+          return reject(new Error('Bucket has no server side encryption configuration'));
+        }
+
+        const algorithm = data.ServerSideEncryptionConfiguration.Rules[0].ApplyServerSideEncryptionByDefault.SSEAlgorithm;
+
+        resolve(`Bucket encryption algorithm is: ${algorithm}`);
       })
     })
   }
