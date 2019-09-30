@@ -62,6 +62,10 @@ class S3Audit extends Command {
               {
                 title: 'Bucket versioning is enabled',
                 task: () => this.checkBucketVersioning(bucketName)
+              },
+              {
+                title: 'Bucket website is disabled',
+                task: () => this.checkBucketWebsite(bucketName)
               }
             ], {concurrent: true, exitOnError: false});
           }
@@ -139,6 +143,18 @@ class S3Audit extends Command {
         if (data === null || data.Status !== 'Enabled') {
           return reject();
         }
+      })
+    })
+  }
+
+  private async checkBucketWebsite(bucketName: string) {
+    return new Promise((resolve, reject) => {
+      this.s3.getBucketWebsite({Bucket: bucketName}, (error: Object, data: S3.Types.GetBucketWebsiteOutput) => {
+        if (data === null) {
+          return resolve();
+        }
+
+        reject(new Error('Bucket has static website hosting enabled'))
       })
     })
   }
