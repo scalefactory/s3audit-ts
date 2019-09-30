@@ -52,14 +52,18 @@ class S3Audit extends Command {
           task: () => {
             return new Listr([
               {
-                title: 'Bucket public access block',
+                title: 'Bucket public access is blocked',
                 task: () => this.checkBucketPublicAccess(bucketName)
               },
               {
-                title: 'Server side encryption enabled',
+                title: 'Server side encryption is enabled',
                 task: () => this.checkEncryptionIsEnabled(bucketName)
+              },
+              {
+                title: 'Bucket versioning is enabled',
+                task: () => this.checkBucketVersioning(bucketName)
               }
-            ], {concurrent: true});
+            ], {concurrent: true, exitOnError: false});
           }
         }
       ]);
@@ -72,7 +76,7 @@ class S3Audit extends Command {
     return new Promise((resolve, reject) => {
       this.s3.getPublicAccessBlock({Bucket: bucketName}, (error: Object, data: S3.Types.GetPublicAccessBlockOutput) => {
         if (data === null) {
-          return reject(new Error('Bucket has no public access block'));
+          return reject();
         }
 
         const publicAccessBlockConfiguration = data.PublicAccessBlockConfiguration || {};
@@ -110,7 +114,7 @@ class S3Audit extends Command {
               }
             }
           }
-        ], {concurrent: true}));
+        ], {concurrent: true, exitOnError: false}));
       })
     })
   }
@@ -119,12 +123,22 @@ class S3Audit extends Command {
     return new Promise((resolve, reject) => {
       this.s3.getBucketEncryption({Bucket: bucketName}, (error: Object, data: S3.Types.GetBucketEncryptionOutput) => {
         if (data === null || data.ServerSideEncryptionConfiguration === undefined || data.ServerSideEncryptionConfiguration.Rules[0].ApplyServerSideEncryptionByDefault === undefined) {
-          return reject(new Error('Bucket has no server side encryption configuration'));
+          return reject();
         }
 
         const algorithm = data.ServerSideEncryptionConfiguration.Rules[0].ApplyServerSideEncryptionByDefault.SSEAlgorithm;
 
         resolve(`Bucket encryption algorithm is: ${algorithm}`);
+      })
+    })
+  }
+
+  private async checkBucketVersioning(bucketName: string) {
+    return new Promise((resolve, reject) => {
+      this.s3.getBucketVersioning({Bucket: bucketName}, (error: Object, data: S3.Types.GetBucketVersioningOutput) => {
+        if (data === null || data.Status !== 'Enabled') {
+          return reject();
+        }
       })
     })
   }
