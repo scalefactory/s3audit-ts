@@ -1,0 +1,45 @@
+{
+  "name": "s3audit",
+  "version": "0.0.0",
+  "author": "Rob Taylor @robbytaylor",
+  "bin": {
+    "s3audit": "./bin/run"
+  },
+  "bugs": "https://github.com/scalefactory/s3audit/issues",
+  "dependencies": {
+    "@oclif/command": "^1.5.19",
+    "@oclif/config": "^1.13.3",
+    "@oclif/plugin-help": "^2.2.1",
+    "tslib": "^1.10.0"
+  },
+  "devDependencies": {
+    "@oclif/tslint": "^3.1.1",
+    "@types/node": "^10.14.19",
+    "ts-node": "^8.4.1",
+    "tslint": "^5.20.0",
+    "typescript": "^3.6.3"
+  },
+  "engines": {
+    "node": ">=8.0.0"
+  },
+  "files": [
+    "/bin",
+    "/lib"
+  ],
+  "homepage": "https://github.com/scalefactory/s3audit",
+  "keywords": [
+    "oclif"
+  ],
+  "license": "MIT",
+  "main": "lib/index.js",
+  "oclif": {
+    "bin": "s3audit"
+  },
+  "repository": "scalefactory/s3audit",
+  "scripts": {
+    "posttest": "tslint -p . -t stylish",
+    "prepack": "rm -rf lib && tsc -b",
+    "test": "echo NO TESTS"
+  },
+  "types": "lib/index.d.ts"
+}
