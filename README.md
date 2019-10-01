@@ -20,6 +20,18 @@ It is recommended to run this in combination with [AWS Vault](https://github.com
 ```sh-session
 $ npm install
 $ aws-vault exec <profile> -- ./bin/run
+
+  ❯ s3audit-demo
+    ❯ Bucket public access is blocked
+      ✖ BlockPublicAcls
+      ✖ IgnorePublicAcls
+      ✖ BlockPublicPolicy
+      ✖ RestrictPublicBuckets
+    ✖ Server side encryption is enabled
+    ✖ Bucket versioning is enabled
+    ✔ Bucket website is disabled
+    ✔ Bucket policy doesn't allow a wildcard entity
+    ✔ Bucket ACL doesn't allow access to "Everyone" or "Any authenticated AWS user"
 ```
 
 <!-- usagestop -->
