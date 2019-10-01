@@ -7,15 +7,32 @@ import Bucket from './bucket'
 const Listr = require('listr')
 
 class S3Audit extends Command {
-  static description = 'describe the command here'
+  static description = 'Audits S3 bucket settings'
+
+  static args = []
 
   static flags = {
+    bucket: flags.string({
+      description: 'The name of a bucket to target'
+    }),
+
     version: flags.version({char: 'v'}),
     help: flags.help({char: 'h'}),
   }
 
+  private listrOptions = {
+    exitOnError: false,
+    collapse: false,
+    concurrent: true
+  }
+
   async run() {
+    const {flags} = this.parse(S3Audit)
     const buckets: Bucket[] = []
+
+    if (flags.bucket) {
+      return this.auditBuckets([new Bucket(flags.bucket)]);
+    }
 
     new S3().listBuckets((error: Object, data?: S3.Types.ListBucketsOutput) => {
       if (!data || data.Buckets === undefined) {
@@ -33,11 +50,7 @@ class S3Audit extends Command {
   }
 
   private async auditBuckets(buckets: Array<Bucket>) {
-    const tasks = new Listr([], {
-      exitOnError: false,
-      collapse: false,
-      concurrent: true
-    })
+    const tasks = new Listr([], this.listrOptions)
 
     buckets.forEach(bucket => {
       tasks.add([
@@ -73,7 +86,7 @@ class S3Audit extends Command {
                 title: 'Bucket logging is enabled',
                 task: () => bucket.checkLoggingIsEnabled()
               }
-            ], {concurrent: true, exitOnError: false})
+            ], this.listrOptions)
           }
         }
       ])
@@ -118,7 +131,7 @@ class S3Audit extends Command {
           }
         }
       }
-    ], {concurrent: true, exitOnError: false})
+    ], this.listrOptions)
   }
 }
 
