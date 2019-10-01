@@ -64,6 +64,10 @@ class S3Audit extends Command {
               {
                 title: 'Bucket policy doesn\'t allow a wildcard entity',
                 task: () => bucket.checkThatBucketPolicyDoesntAllowWildcardEntity()
+              },
+              {
+                title: 'Bucket ACL doesn\'t allow access to "Everyone" or "Any authenticated AWS user" ',
+                task: () => bucket.checkBucketACL()
               }
             ], {concurrent: true, exitOnError: false})
           }

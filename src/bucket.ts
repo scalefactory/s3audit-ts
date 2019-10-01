@@ -13,6 +13,29 @@ export default class Bucket {
     this.s3 = new S3()
   }
 
+  public async checkBucketACL(): Promise<any> {
+    return new Promise((resolve, reject) => {
+      this.s3.getBucketAcl(this.requestProperties, (error: Object, data: S3.Types.GetBucketAclOutput) => {
+        if (data === null || ! Array.isArray(data.Grants) || data.Grants.length === 0) {
+          return resolve()
+        }
+
+        for (let grant of data.Grants) {
+          if (grant.Grantee === undefined || grant.Grantee.Type !== 'Group' || grant.Grantee.URI === undefined) {
+            continue
+          }
+
+          // tslint:disable-next-line:no-http-string
+          if (['http://acs.amazonaws.com/groups/global/AllUsers', 'http://acs.amazonaws.com/groups/global/AuthenticatedUsers'].includes(grant.Grantee.URI)) {
+            return reject('Bucket ACL allows public access')
+          }
+        }
+
+        resolve()
+      })
+    })
+  }
+
   public async checkBucketWebsite(): Promise<any> {
     return new Promise((resolve, reject) => {
       this.s3.getBucketWebsite(this.requestProperties, (error: Object, data: S3.Types.GetBucketWebsiteOutput) => {
