@@ -59,7 +59,7 @@ class S3Audit extends Command {
           task: () => {
             return new Listr([
               {
-                title: 'Bucket public access is blocked',
+                title: 'Bucket public access configuration',
                 task: () =>
                   new Listr([
                     {
