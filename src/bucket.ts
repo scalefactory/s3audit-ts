@@ -60,6 +60,22 @@ export default class Bucket {
     })
   }
 
+  public async checkLoggingIsEnabled(): Promise<any> {
+    return new Promise((resolve, reject) => {
+      this.s3.getBucketLogging(this.requestProperties, (error: Object, data: S3.Types.GetBucketLoggingOutput) => {
+        if (data === null || data.LoggingEnabled === undefined) {
+          return reject()
+        }
+
+        if (data.LoggingEnabled.TargetBucket) {
+          return resolve(`Logging to ${data.LoggingEnabled.TargetBucket}`)
+        }
+
+        reject()
+      })
+    })
+  }
+
   public async checkEncryptionIsEnabled(): Promise<any> {
     return new Promise((resolve, reject) => {
       this.s3.getBucketEncryption(this.requestProperties, (error: Object, data: S3.Types.GetBucketEncryptionOutput) => {
