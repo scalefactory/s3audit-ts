@@ -64,27 +64,27 @@ class S3Audit extends Command {
               },
               {
                 title: 'Server side encryption is enabled',
-                task: () => bucket.checkEncryptionIsEnabled()
+                task: (context: any,task: any) => this.checkBucketEncryption(task, bucket)
               },
               {
                 title: 'Bucket versioning is enabled',
-                task: () => bucket.checkBucketVersioning()
+                task: (context: any,task: any) => this.checkBucketVersioning(task, bucket)
               },
               {
                 title: 'Bucket website is disabled',
-                task: () => bucket.checkBucketWebsite()
+                task: (context: any,task: any) => this.checkBucketWebsite(task, bucket)
               },
               {
                 title: 'Bucket policy doesn\'t allow a wildcard entity',
-                task: () => bucket.checkThatBucketPolicyDoesntAllowWildcardEntity()
+                task: (context: any,task: any) => this.checkThatBucketPolicyDoesntAllowWildcardEntity(task, bucket)
               },
               {
                 title: 'Bucket ACL doesn\'t allow access to "Everyone" or "Any authenticated AWS user"',
-                task: () => bucket.checkBucketACL()
+                task: (context: any,task: any) => this.checkBucketAcl(task, bucket)
               },
               {
                 title: 'Bucket logging is enabled',
-                task: () => bucket.checkLoggingIsEnabled()
+                task: (context: any,task: any) => this.checkBucketLogging(task, bucket)
               }
             ], this.listrOptions)
           }
@@ -137,6 +137,70 @@ class S3Audit extends Command {
         }
       }
     ], this.listrOptions)
+  }
+
+  private async checkBucketEncryption(task: any, bucket: Bucket) {
+    const algorithm = await bucket.hasEncryptionEnabled()
+
+    if (!algorithm) {
+      task.title = 'Bucket encryption is not enabled'
+
+      throw new Error()
+    }
+
+    task.message = `Encryption algorithm is ${algorithm}`
+  }
+
+  private async checkBucketLogging(task: any, bucket: Bucket) {
+    const targetBucket = await bucket.hasLoggingEnabled()
+
+    if (targetBucket === null) {
+      task.title = 'Bucket logging is not enabled'
+
+      throw new Error()
+    }
+
+    task.message = `Logging to ${targetBucket}`
+  }
+
+  private async checkBucketVersioning(task: any, bucket: Bucket) {
+    const isEnabled = await bucket.hasVersioningEnabled()
+
+    if (isEnabled === false) {
+      task.title = 'Bucket versioning is not enabled'
+
+      throw new Error()
+    }
+  }
+
+  private async checkBucketWebsite(task: any, bucket: Bucket) {
+    const isEnabled = await bucket.hasStaticWebsiteHosting()
+
+    if (isEnabled === true) {
+      task.title = 'Bucket static website hosting is enabled'
+
+      throw new Error()
+    }
+  }
+
+  private async checkThatBucketPolicyDoesntAllowWildcardEntity(task: any, bucket: Bucket) {
+    const statements = await bucket.getPolicyWildcardEntities()
+
+    if (statements.length > 0) {
+      task.message = `Bucket has ${statements.length} statement${statements.length === 1 ? '' : 's'} with wildcard entities`
+
+      throw new Error()
+    }
+  }
+
+  private async checkBucketAcl(task: any, bucket: Bucket) {
+    const allowsPublicAccess = await bucket.allowsPublicAccessViaACL()
+
+    if (allowsPublicAccess === true) {
+      task.title = 'Bucket allows public access via ACL'
+
+      throw new Error()
+    }
   }
 }
 
