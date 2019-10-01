@@ -1,15 +1,26 @@
 s3audit
-=======
+==================
 
+Checks the settings for all S3 buckets in an AWS account for public access
 
-
+![GitHub package.json version](https://img.shields.io/github/package-json/v/ScaleFactory/s3audit.svg)
 [![oclif](https://img.shields.io/badge/cli-oclif-brightgreen.svg)](https://oclif.io)
-[![Version](https://img.shields.io/npm/v/s3audit.svg)](https://npmjs.org/package/s3audit)
-[![Downloads/week](https://img.shields.io/npm/dw/s3audit.svg)](https://npmjs.org/package/s3audit)
-[![License](https://img.shields.io/npm/l/s3audit.svg)](https://github.com/scalefactory/s3audit/blob/master/package.json)
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 
 <!-- toc -->
+* [Usage](#usage)
+<!-- tocstop -->
+
 # Usage
 <!-- usage -->
-# Commands
-<!-- commands -->
+
+### Node
+AWS credentials will be taken from environment variables.
+It is recommended to run this in combination with [AWS Vault](https://github.com/99designs/aws-vault)
+
+```sh-session
+$ npm install
+$ aws-vault exec <profile> -- ./bin/run
+```
+
+<!-- usagestop -->
