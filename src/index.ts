@@ -31,7 +31,7 @@ class S3Audit extends Command {
     const buckets: Bucket[] = []
 
     if (flags.bucket) {
-      return this.auditBuckets([new Bucket(flags.bucket)]);
+      return this.auditBuckets([new Bucket(flags.bucket)])
     }
 
     new S3().listBuckets((error: Object, data?: S3.Types.ListBucketsOutput) => {
@@ -115,12 +115,7 @@ class S3Audit extends Command {
   }
 
   private async checkPublicAccesBlockFor(bucket: Bucket, setting: string) {
-    const publicAccessBlockConfiguration: S3Audit.Types.PublicAccessBlockConfiguration =
-      await bucket
-        .getPublicAccessConfiguration()
-        .catch(() => {
-          throw new Error()
-        })
+    const publicAccessBlockConfiguration: S3Audit.Types.PublicAccessBlockConfiguration = await bucket.getPublicAccessConfiguration()
 
     if (publicAccessBlockConfiguration[setting] === false) {
       throw new Error()
