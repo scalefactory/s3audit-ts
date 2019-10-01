@@ -86,11 +86,11 @@ class S3Audit extends Command {
                 task: (context: any,task: any) => this.checkBucketEncryption(task, bucket)
               },
               {
-                title: 'Bucket versioning is enabled',
+                title: 'Object versioning is enabled',
                 task: (context: any,task: any) => this.checkBucketVersioning(task, bucket)
               },
               {
-                title: 'Bucket website is disabled',
+                title: 'Static website hosting is disabled',
                 task: (context: any,task: any) => this.checkBucketWebsite(task, bucket)
               },
               {
@@ -102,7 +102,7 @@ class S3Audit extends Command {
                 task: (context: any,task: any) => this.checkBucketAcl(task, bucket)
               },
               {
-                title: 'Bucket logging is enabled',
+                title: 'Logging is enabled',
                 task: (context: any,task: any) => this.checkBucketLogging(task, bucket)
               }
             ], this.listrOptions)
@@ -131,7 +131,7 @@ class S3Audit extends Command {
     const algorithm = await bucket.hasEncryptionEnabled()
 
     if (!algorithm) {
-      task.title = 'Bucket encryption is not enabled'
+      task.title = 'Server side encryption is not enabled'
 
       throw new Error()
     }
@@ -143,7 +143,7 @@ class S3Audit extends Command {
     const targetBucket = await bucket.hasLoggingEnabled()
 
     if (targetBucket === null) {
-      task.title = 'Bucket logging is not enabled'
+      task.title = 'Logging is not enabled'
 
       throw new Error()
     }
@@ -155,7 +155,7 @@ class S3Audit extends Command {
     const isEnabled = await bucket.hasVersioningEnabled()
 
     if (isEnabled === false) {
-      task.title = 'Bucket versioning is not enabled'
+      task.title = 'Object versioning is not enabled'
 
       throw new Error()
     }
@@ -165,7 +165,7 @@ class S3Audit extends Command {
     const isEnabled = await bucket.hasStaticWebsiteHosting()
 
     if (isEnabled === true) {
-      task.title = 'Bucket static website hosting is enabled'
+      task.title = 'Static website hosting is enabled'
 
       throw new Error()
     }
