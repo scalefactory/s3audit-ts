@@ -69,4 +69,48 @@ export default class Bucket {
       })
     })
   }
+
+  public async checkThatBucketPolicyDoesntAllowWildcardEntity(): Promise<any> {
+    return new Promise((resolve, reject) => {
+      this.s3.getBucketPolicy(this.requestProperties, (error: Object, data: S3.Types.GetBucketPolicyOutput) => {
+        if (data === null || data.Policy === undefined) {
+          return resolve()
+        }
+
+        const policy = JSON.parse(data.Policy)
+
+        for (let statement of policy.Statement) {
+          if (statement.Effect === 'Deny') {
+            continue
+          }
+
+          if (statement.Principal === '*') {
+            return reject(`Statement ${statement.Sid} allows a wildcard principal`)
+          }
+
+          if (Array.isArray(statement.Principal)) {
+            for (let principal of statement.Principal) {
+              if (principal === '*') {
+                return reject(`Statement ${statement.Sid} allows a wildcard principal`)
+              }
+            }
+          }
+
+          if (statement.Action === '*') {
+            return reject(`Statement ${statement.Sid} allows a wildcard action`)
+          }
+
+          if (Array.isArray(statement.Action)) {
+            for (let action of statement.Action) {
+              if (action === '*') {
+                return reject(`Statement ${statement.Sid} allows a wildcard action`)
+              }
+            }
+          }
+        }
+
+        resolve()
+      })
+    })
+  }
 }

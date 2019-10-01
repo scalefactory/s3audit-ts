@@ -60,6 +60,10 @@ class S3Audit extends Command {
               {
                 title: 'Bucket website is disabled',
                 task: () => bucket.checkBucketWebsite()
+              },
+              {
+                title: 'Bucket policy doesn\'t allow a wildcard entity',
+                task: () => bucket.checkThatBucketPolicyDoesntAllowWildcardEntity()
               }
             ], {concurrent: true, exitOnError: false})
           }
