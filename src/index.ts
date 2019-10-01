@@ -111,7 +111,12 @@ class S3Audit extends Command {
       ])
     })
 
-    tasks.run().catch((err: Error) => {})
+    new Listr([
+      {
+        title: `Checking ${buckets.length} bucket${buckets.length === 1 ? '' : 's'}`,
+        task: () => tasks
+      }
+    ]).run().catch((err: Error) => {})
   }
 
   private async checkPublicAccesBlockFor(bucket: Bucket, setting: string) {
