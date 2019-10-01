@@ -96,7 +96,12 @@ class S3Audit extends Command {
   }
 
   private async checkBucketPublicAccess(bucket: Bucket) {
-    const publicAccessBlockConfiguration: S3Audit.Types.PublicAccessBlockConfiguration = await bucket.checkPublicAccess()
+    const publicAccessBlockConfiguration: S3Audit.Types.PublicAccessBlockConfiguration =
+      await bucket
+        .checkPublicAccess()
+        .catch(() => {
+          throw new Error()
+        })
 
     return new Listr([
       {
