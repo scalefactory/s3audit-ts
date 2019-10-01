@@ -4,6 +4,7 @@ import {S3Audit} from './@types'
 
 export default class Bucket {
   public name: string
+  private publicAccessConfiguration?: S3Audit.Types.PublicAccessBlockConfiguration
   private requestProperties: S3Audit.Types.S3RequestProperties
   private s3: S3
 
@@ -36,8 +37,12 @@ export default class Bucket {
     })
   }
 
-  public async checkPublicAccess(): Promise<any> {
+  public async getPublicAccessConfiguration(): Promise<any> {
     return new Promise((resolve, reject) => {
+      if (this.publicAccessConfiguration !== undefined) {
+        return resolve(this.publicAccessConfiguration)
+      }
+
       this.s3.getPublicAccessBlock(this.requestProperties, (error: Object, data: S3.Types.GetPublicAccessBlockOutput) => {
         const defaultConfig: S3Audit.Types.PublicAccessBlockConfiguration = {
           BlockPublicAcls: false,
@@ -46,11 +51,10 @@ export default class Bucket {
           IgnorePublicAcls: false
         }
 
-        if (data === null) {
-          return resolve(defaultConfig)
-        }
+        this.publicAccessConfiguration = (data === null) ? defaultConfig
+          : Object.assign(defaultConfig, data.PublicAccessBlockConfiguration)
 
-        resolve(Object.assign(defaultConfig, data.PublicAccessBlockConfiguration))
+        resolve(this.publicAccessConfiguration)
       })
     })
   }

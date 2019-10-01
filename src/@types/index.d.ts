@@ -6,6 +6,7 @@ export declare module S3Audit.Types {
   }
 
   export interface PublicAccessBlockConfiguration {
+    [propName: string]: any;
     BlockPublicAcls?: boolean
     BlockPublicPolicy?: boolean
     RestrictPublicBuckets?: boolean

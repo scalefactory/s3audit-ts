@@ -49,18 +49,37 @@ class S3Audit extends Command {
     })
   }
 
-  private async auditBuckets(buckets: Array<Bucket>) {
+  private auditBuckets(buckets: Array<Bucket>) {
     const tasks = new Listr([], this.listrOptions)
 
     buckets.forEach(bucket => {
       tasks.add([
         {
           title: bucket.name,
-          task: async () => {
+          task: () => {
             return new Listr([
               {
                 title: 'Bucket public access is blocked',
-                task: () => this.checkBucketPublicAccess(bucket)
+                task: () =>
+                  new Listr([
+                    {
+                      title: 'BlockPublicAcls',
+                      task: () => this.checkPublicAccesBlockFor(bucket, 'BlockPublicAcls')
+                    },
+                    {
+                      title: 'IgnorePublicAcls',
+                      task: () => this.checkPublicAccesBlockFor(bucket, 'IgnorePublicAcls')
+                    },
+                    {
+                      title: 'BlockPublicPolicy',
+                      task: () => this.checkPublicAccesBlockFor(bucket, 'BlockPublicPolicy')
+                    },
+                    {
+                      title: 'RestrictPublicBuckets',
+                      task: () => this.checkPublicAccesBlockFor(bucket, 'RestrictPublicBuckets')
+                    }
+                  ], this.listrOptions)
+
               },
               {
                 title: 'Server side encryption is enabled',
@@ -95,48 +114,17 @@ class S3Audit extends Command {
     tasks.run().catch((err: Error) => {})
   }
 
-  private async checkBucketPublicAccess(bucket: Bucket) {
+  private async checkPublicAccesBlockFor(bucket: Bucket, setting: string) {
     const publicAccessBlockConfiguration: S3Audit.Types.PublicAccessBlockConfiguration =
       await bucket
-        .checkPublicAccess()
+        .getPublicAccessConfiguration()
         .catch(() => {
           throw new Error()
         })
 
-    return new Listr([
-      {
-        title: 'BlockPublicAcls',
-        task: () => {
-          if (publicAccessBlockConfiguration.BlockPublicAcls !== true) {
-            throw new Error()
-          }
-        }
-      },
-      {
-        title: 'IgnorePublicAcls',
-        task: () => {
-          if (publicAccessBlockConfiguration.IgnorePublicAcls !== true) {
-            throw new Error()
-          }
-        }
-      },
-      {
-        title: 'BlockPublicPolicy',
-        task: () => {
-          if (publicAccessBlockConfiguration.BlockPublicPolicy !== true) {
-            throw new Error()
-          }
-        }
-      },
-      {
-        title: 'RestrictPublicBuckets',
-        task: () => {
-          if (publicAccessBlockConfiguration.RestrictPublicBuckets !== true) {
-            throw new Error()
-          }
-        }
-      }
-    ], this.listrOptions)
+    if (publicAccessBlockConfiguration[setting] === false) {
+      throw new Error()
+    }
   }
 
   private async checkBucketEncryption(task: any, bucket: Bucket) {
