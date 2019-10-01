@@ -1,6 +1,8 @@
 import {Command, flags} from '@oclif/command'
-import * as Config from '@oclif/config';
 import {S3} from 'aws-sdk'
+
+import {S3Audit} from './@types'
+import Bucket from './bucket'
 
 const Listr = require('listr')
 
@@ -12,151 +14,99 @@ class S3Audit extends Command {
     help: flags.help({char: 'h'}),
   }
 
-  private s3: S3;
-
-  constructor(argv: string[], config: Config.IConfig) {
-    super(argv, config);
-
-    this.s3 = new S3();
-  }
-
   async run() {
-    const buckets: string[] = []
+    const buckets: Bucket[] = []
 
-    this.s3.listBuckets((error: Object, data?: S3.Types.ListBucketsOutput) => {
-      if (!data || typeof data.Buckets === 'undefined') {
-        return this.exit();
+    new S3().listBuckets((error: Object, data?: S3.Types.ListBucketsOutput) => {
+      if (!data || data.Buckets === undefined) {
+        return this.exit()
       }
 
       data.Buckets.forEach(bucket => {
-        if (typeof bucket.Name !== 'undefined') {
-          buckets.push(bucket.Name);
+        if (bucket.Name !== undefined) {
+          buckets.push(new Bucket(bucket.Name))
         }
-      });
+      })
 
-      this.auditBuckets(buckets);
+      this.auditBuckets(buckets)
     })
   }
 
-  private async auditBuckets(buckets: Array<string>) {
+  private async auditBuckets(buckets: Array<Bucket>) {
     const tasks = new Listr([], {
       exitOnError: false,
       collapse: false,
       concurrent: true
-    });
+    })
 
-    buckets.forEach(bucketName => {
+    buckets.forEach(bucket => {
       tasks.add([
         {
-          title: bucketName,
-          task: () => {
+          title: bucket.name,
+          task: async () => {
             return new Listr([
               {
                 title: 'Bucket public access is blocked',
-                task: () => this.checkBucketPublicAccess(bucketName)
+                task: () => this.checkBucketPublicAccess(bucket)
               },
               {
                 title: 'Server side encryption is enabled',
-                task: () => this.checkEncryptionIsEnabled(bucketName)
+                task: () => bucket.checkEncryptionIsEnabled()
               },
               {
                 title: 'Bucket versioning is enabled',
-                task: () => this.checkBucketVersioning(bucketName)
+                task: () => bucket.checkBucketVersioning()
               },
               {
                 title: 'Bucket website is disabled',
-                task: () => this.checkBucketWebsite(bucketName)
+                task: () => bucket.checkBucketWebsite()
               }
-            ], {concurrent: true, exitOnError: false});
+            ], {concurrent: true, exitOnError: false})
           }
         }
-      ]);
-    });
+      ])
+    })
 
-    tasks.run().catch((err: any) => {});
+    tasks.run().catch((err: Error) => {})
   }
 
-  private async checkBucketPublicAccess(bucketName: string) {
-    return new Promise((resolve, reject) => {
-      this.s3.getPublicAccessBlock({Bucket: bucketName}, (error: Object, data: S3.Types.GetPublicAccessBlockOutput) => {
-        if (data === null) {
-          return reject();
-        }
+  private async checkBucketPublicAccess(bucket: Bucket) {
+    const publicAccessBlockConfiguration: S3Audit.Types.PublicAccessBlockConfiguration = await bucket.checkPublicAccess()
 
-        const publicAccessBlockConfiguration = data.PublicAccessBlockConfiguration || {};
-
-        resolve(new Listr([
-          {
-            title: 'BlockPublicAcls',
-            task: () => {
-              if (publicAccessBlockConfiguration.BlockPublicAcls !== true) {
-                throw new Error();
-              }
-            }
-          },
-          {
-            title: 'IgnorePublicAcls',
-            task: () => {
-              if (publicAccessBlockConfiguration.IgnorePublicAcls !== true) {
-                throw new Error();
-              }
-            }
-          },
-          {
-            title: 'BlockPublicPolicy',
-            task: () => {
-              if (publicAccessBlockConfiguration.BlockPublicPolicy !== true) {
-                throw new Error();
-              }
-            }
-          },
-          {
-            title: 'RestrictPublicBuckets',
-            task: () => {
-              if (publicAccessBlockConfiguration.RestrictPublicBuckets !== true) {
-                throw new Error();
-              }
-            }
+    return new Listr([
+      {
+        title: 'BlockPublicAcls',
+        task: () => {
+          if (publicAccessBlockConfiguration.BlockPublicAcls !== true) {
+            throw new Error()
           }
-        ], {concurrent: true, exitOnError: false}));
-      })
-    })
-  }
-
-  private async checkEncryptionIsEnabled(bucketName: string) {
-    return new Promise((resolve, reject) => {
-      this.s3.getBucketEncryption({Bucket: bucketName}, (error: Object, data: S3.Types.GetBucketEncryptionOutput) => {
-        if (data === null || data.ServerSideEncryptionConfiguration === undefined || data.ServerSideEncryptionConfiguration.Rules[0].ApplyServerSideEncryptionByDefault === undefined) {
-          return reject();
         }
-
-        const algorithm = data.ServerSideEncryptionConfiguration.Rules[0].ApplyServerSideEncryptionByDefault.SSEAlgorithm;
-
-        resolve(`Bucket encryption algorithm is: ${algorithm}`);
-      })
-    })
-  }
-
-  private async checkBucketVersioning(bucketName: string) {
-    return new Promise((resolve, reject) => {
-      this.s3.getBucketVersioning({Bucket: bucketName}, (error: Object, data: S3.Types.GetBucketVersioningOutput) => {
-        if (data === null || data.Status !== 'Enabled') {
-          return reject();
+      },
+      {
+        title: 'IgnorePublicAcls',
+        task: () => {
+          if (publicAccessBlockConfiguration.IgnorePublicAcls !== true) {
+            throw new Error()
+          }
         }
-      })
-    })
-  }
-
-  private async checkBucketWebsite(bucketName: string) {
-    return new Promise((resolve, reject) => {
-      this.s3.getBucketWebsite({Bucket: bucketName}, (error: Object, data: S3.Types.GetBucketWebsiteOutput) => {
-        if (data === null) {
-          return resolve();
+      },
+      {
+        title: 'BlockPublicPolicy',
+        task: () => {
+          if (publicAccessBlockConfiguration.BlockPublicPolicy !== true) {
+            throw new Error()
+          }
         }
-
-        reject(new Error('Bucket has static website hosting enabled'))
-      })
-    })
+      },
+      {
+        title: 'RestrictPublicBuckets',
+        task: () => {
+          if (publicAccessBlockConfiguration.RestrictPublicBuckets !== true) {
+            throw new Error()
+          }
+        }
+      }
+    ], {concurrent: true, exitOnError: false})
   }
 }
 
