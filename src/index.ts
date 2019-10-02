@@ -64,19 +64,19 @@ class S3Audit extends Command {
                   new Listr([
                     {
                       title: 'BlockPublicAcls',
-                      task: () => this.checkPublicAccesBlockFor(bucket, 'BlockPublicAcls')
+                      task: (context: any, task: any) => this.checkPublicAccesBlockFor(task, bucket, 'BlockPublicAcls')
                     },
                     {
                       title: 'IgnorePublicAcls',
-                      task: () => this.checkPublicAccesBlockFor(bucket, 'IgnorePublicAcls')
+                      task: (context: any, task: any) => this.checkPublicAccesBlockFor(task, bucket, 'IgnorePublicAcls')
                     },
                     {
                       title: 'BlockPublicPolicy',
-                      task: () => this.checkPublicAccesBlockFor(bucket, 'BlockPublicPolicy')
+                      task: (context: any, task: any) => this.checkPublicAccesBlockFor(task, bucket, 'BlockPublicPolicy')
                     },
                     {
                       title: 'RestrictPublicBuckets',
-                      task: () => this.checkPublicAccesBlockFor(bucket, 'RestrictPublicBuckets')
+                      task: (context: any, task: any) => this.checkPublicAccesBlockFor(task, bucket, 'RestrictPublicBuckets')
                     }
                   ], this.listrOptions)
 
@@ -119,10 +119,12 @@ class S3Audit extends Command {
     ]).run().catch((err: Error) => {})
   }
 
-  private async checkPublicAccesBlockFor(bucket: Bucket, setting: string) {
+  private async checkPublicAccesBlockFor(task: any, bucket: Bucket, setting: string) {
     const publicAccessBlockConfiguration: S3Audit.Types.PublicAccessBlockConfiguration = await bucket.getPublicAccessConfiguration()
 
     if (publicAccessBlockConfiguration[setting] === false) {
+      task.title = `${setting} is set to false`
+
       throw new Error()
     }
   }
