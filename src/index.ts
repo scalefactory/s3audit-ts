@@ -148,7 +148,7 @@ class S3Audit extends Command {
           throw new Error()
         }
 
-        task.message = `Encryption algorithm is ${algorithm}`
+        task.output = `Encryption algorithm is ${algorithm}`
       })
   }
 
@@ -164,7 +164,7 @@ class S3Audit extends Command {
       throw new Error()
     }
 
-    task.message = `Logging to ${targetBucket}`
+    task.output = `Logging to ${targetBucket}`
   }
 
   private async checkBucketVersioning(task: S3Audit.Types.ListrTask, bucket: Bucket) {
@@ -200,7 +200,7 @@ class S3Audit extends Command {
       })
 
     if (Array.isArray(statements) && statements.length > 0) {
-      task.message = `Bucket has ${statements.length} statement${statements.length === 1 ? '' : 's'} with wildcard entities`
+      task.output = `Bucket has ${statements.length} statement${statements.length === 1 ? '' : 's'} with wildcard entities`
 
       throw new Error()
     }
