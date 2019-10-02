@@ -164,7 +164,7 @@ export default class Bucket {
           return resolve(false)
         }
 
-        resolve(data)
+        resolve(true)
       })
     })
   }
