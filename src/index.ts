@@ -137,18 +137,18 @@ class S3Audit extends Command {
   }
 
   private async checkBucketEncryption(task: S3Audit.Types.ListrTask, bucket: Bucket) {
-    bucket.hasEncryptionEnabled()
+    return bucket.getSSEAlgorithm()
+      .catch((error: AWSError) => {
+        task.skip(error.message)
+      })
       .then((algorithm?: string) => {
-        if (!algorithm) {
+        if (algorithm === null) {
           task.title = 'Server side encryption is not enabled'
 
           throw new Error()
         }
 
         task.message = `Encryption algorithm is ${algorithm}`
-      })
-      .catch((error: AWSError) => {
-        task.skip(error.message)
       })
   }
 

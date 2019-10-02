@@ -126,7 +126,7 @@ export default class Bucket {
     })
   }
 
-  public async hasEncryptionEnabled(): Promise<any> {
+  public async getSSEAlgorithm(): Promise<any> {
     return new Promise((resolve, reject) => {
       this.s3.getBucketEncryption(this.requestProperties, (error: AWSError, data: S3.Types.GetBucketEncryptionOutput) => {
         if (error !== null && error.code !== 'ServerSideEncryptionConfigurationNotFoundError') {
@@ -134,7 +134,7 @@ export default class Bucket {
         }
 
         if (data === null || data.ServerSideEncryptionConfiguration === undefined || data.ServerSideEncryptionConfiguration.Rules[0].ApplyServerSideEncryptionByDefault === undefined) {
-          return resolve(false)
+          return resolve(null)
         }
 
         const algorithm = data.ServerSideEncryptionConfiguration.Rules[0].ApplyServerSideEncryptionByDefault.SSEAlgorithm
