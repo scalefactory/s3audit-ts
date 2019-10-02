@@ -15,7 +15,7 @@ export default class Bucket {
   }
 
   public async allowsPublicAccessViaACL(): Promise<any> {
-    return new Promise((resolve, reject) => {
+    return new Promise(resolve => {
       this.s3.getBucketAcl(this.requestProperties, (error: Object, data: S3.Types.GetBucketAclOutput) => {
         if (data === null || ! Array.isArray(data.Grants) || data.Grants.length === 0) {
           return resolve(false)
@@ -38,7 +38,7 @@ export default class Bucket {
   }
 
   public async getPublicAccessConfiguration(): Promise<any> {
-    return new Promise((resolve, reject) => {
+    return new Promise(resolve => {
       if (this.publicAccessConfiguration !== undefined) {
         return resolve(this.publicAccessConfiguration)
       }
@@ -60,7 +60,7 @@ export default class Bucket {
   }
 
   public async getPolicyWildcardEntities(): Promise<any> {
-    return new Promise((resolve, reject) => {
+    return new Promise(resolve => {
       this.s3.getBucketPolicy(this.requestProperties, (error: Object, data: S3.Types.GetBucketPolicyOutput) => {
         if (data === null || data.Policy === undefined) {
           return resolve([])
@@ -75,7 +75,7 @@ export default class Bucket {
           }
 
           if (statement.Principal === '*') {
-            statements.push(statement);
+            statements.push(statement)
 
             continue
           }
@@ -113,7 +113,7 @@ export default class Bucket {
   }
 
   public async hasEncryptionEnabled(): Promise<any> {
-    return new Promise((resolve, reject) => {
+    return new Promise(resolve => {
       this.s3.getBucketEncryption(this.requestProperties, (error: Object, data: S3.Types.GetBucketEncryptionOutput) => {
         if (data === null || data.ServerSideEncryptionConfiguration === undefined || data.ServerSideEncryptionConfiguration.Rules[0].ApplyServerSideEncryptionByDefault === undefined) {
           return resolve(false)
@@ -127,7 +127,7 @@ export default class Bucket {
   }
 
   public async hasLoggingEnabled(): Promise<any> {
-    return new Promise((resolve, reject) => {
+    return new Promise(resolve => {
       this.s3.getBucketLogging(this.requestProperties, (error: Object, data: S3.Types.GetBucketLoggingOutput) => {
         if (data === null || data.LoggingEnabled === undefined) {
           return resolve(null)
@@ -143,7 +143,7 @@ export default class Bucket {
   }
 
   public async hasStaticWebsiteHosting(): Promise<any> {
-    return new Promise((resolve, reject) => {
+    return new Promise(resolve => {
       this.s3.getBucketWebsite(this.requestProperties, (error: Object, data: S3.Types.GetBucketWebsiteOutput) => {
         if (data === null) {
           return resolve(false)

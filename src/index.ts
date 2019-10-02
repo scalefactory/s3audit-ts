@@ -83,27 +83,27 @@ class S3Audit extends Command {
               },
               {
                 title: 'Server side encryption is enabled',
-                task: (context: any,task: any) => this.checkBucketEncryption(task, bucket)
+                task: (context: any, task: any) => this.checkBucketEncryption(task, bucket)
               },
               {
                 title: 'Object versioning is enabled',
-                task: (context: any,task: any) => this.checkBucketVersioning(task, bucket)
+                task: (context: any, task: any) => this.checkBucketVersioning(task, bucket)
               },
               {
                 title: 'Static website hosting is disabled',
-                task: (context: any,task: any) => this.checkBucketWebsite(task, bucket)
+                task: (context: any, task: any) => this.checkBucketWebsite(task, bucket)
               },
               {
                 title: 'Bucket policy doesn\'t allow a wildcard entity',
-                task: (context: any,task: any) => this.checkThatBucketPolicyDoesntAllowWildcardEntity(task, bucket)
+                task: (context: any, task: any) => this.checkThatBucketPolicyDoesntAllowWildcardEntity(task, bucket)
               },
               {
                 title: 'Bucket ACL doesn\'t allow access to "Everyone" or "Any authenticated AWS user"',
-                task: (context: any,task: any) => this.checkBucketAcl(task, bucket)
+                task: (context: any, task: any) => this.checkBucketAcl(task, bucket)
               },
               {
                 title: 'Logging is enabled',
-                task: (context: any,task: any) => this.checkBucketLogging(task, bucket)
+                task: (context: any, task: any) => this.checkBucketLogging(task, bucket)
               }
             ], this.listrOptions)
           }
