@@ -57,7 +57,7 @@ jobs:
       - attach_workspace:
           at: ~/cli
       - run: ghr -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} -replace ${CIRCLE_TAG} ./dist/deb/
-      - run: ghr -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} -replace ${CIRCLE_TAG} ./dist/sf*
+      - run: ghr -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} -replace ${CIRCLE_TAG} ./dist/s3audit*
 
 workflows:
   version: 2
