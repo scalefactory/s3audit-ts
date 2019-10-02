@@ -1,6 +1,6 @@
 {
   "name": "s3audit",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "author": "Rob Taylor @robbytaylor",
   "bin": {
     "s3audit": "./bin/run"
@@ -32,7 +32,7 @@
   "keywords": [
     "oclif"
   ],
-  "license": "apache",
+  "license": "Apache-2.0",
   "main": "lib/index.js",
   "oclif": {
     "bin": "s3audit"
