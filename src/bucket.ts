@@ -128,22 +128,6 @@ export default class Bucket {
     })
   }
 
-  public async hasLoggingEnabled(): Promise<any> {
-    return new Promise(resolve => {
-      this.s3.getBucketLogging(this.requestProperties, (error: Object, data: S3.Types.GetBucketLoggingOutput) => {
-        if (data === null || data.LoggingEnabled === undefined) {
-          return resolve(null)
-        }
-
-        if (data.LoggingEnabled.TargetBucket) {
-          return resolve(data.LoggingEnabled.TargetBucket)
-        }
-
-        resolve(null)
-      })
-    })
-  }
-
   public async hasMFADeleteEnabled(): Promise<any> {
     return new Promise(resolve => {
       this.getBucketVersioning()
@@ -179,6 +163,22 @@ export default class Bucket {
 
           resolve(true)
         })
+    })
+  }
+
+  public async getLoggingTargetBucket(): Promise<any> {
+    return new Promise(resolve => {
+      this.s3.getBucketLogging(this.requestProperties, (error: Object, data: S3.Types.GetBucketLoggingOutput) => {
+        if (data === null || data.LoggingEnabled === undefined) {
+          return resolve(null)
+        }
+
+        if (data.LoggingEnabled.TargetBucket) {
+          return resolve(data.LoggingEnabled.TargetBucket)
+        }
+
+        resolve(null)
+      })
     })
   }
 

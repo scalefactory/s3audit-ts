@@ -146,7 +146,7 @@ class S3Audit extends Command {
   }
 
   private async checkBucketLogging(task: S3Audit.Types.ListrTask, bucket: Bucket) {
-    const targetBucket = await bucket.hasLoggingEnabled()
+    const targetBucket = await bucket.getLoggingTargetBucket()
 
     if (targetBucket === null) {
       task.title = 'Logging is not enabled'
