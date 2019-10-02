@@ -1,6 +1,6 @@
 {
   "name": "s3audit",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "author": "Rob Taylor @robbytaylor",
   "bin": {
     "s3audit": "./bin/run"
