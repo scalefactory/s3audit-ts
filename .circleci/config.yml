@@ -49,7 +49,7 @@ jobs:
             - ~/.npm
             - /usr/local/lib/node_modules
 
-  publish-github-release:
+  publish:
     docker:
       - image: cibuilds/github:0.10
     working_directory: ~/cli
@@ -58,6 +58,12 @@ jobs:
           at: ~/cli
       - run: ghr -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} -replace ${CIRCLE_TAG} ./dist/deb/
       - run: ghr -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} -replace ${CIRCLE_TAG} ./dist/s3audit*
+      - run:
+          name: Authenticate with registry
+          command: echo "//registry.npmjs.org/:_authToken=$npm_TOKEN" > ~/repo/.npmrc
+      - run:
+          name: Publish package
+          command: npm publish
 
 workflows:
   version: 2
@@ -80,7 +86,7 @@ workflows:
               only: /^v.*/
             branches:
               ignore: /.*/
-      - publish-github-release:
+      - publish:
           requires:
             - pack
           filters:
