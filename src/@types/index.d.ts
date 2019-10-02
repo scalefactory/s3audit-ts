@@ -16,4 +16,9 @@ export declare module S3Audit.Types {
   export interface S3RequestProperties {
     Bucket: S3.Types.BucketName
   }
+
+  export interface ListrTask {
+    title: string
+    message: string
+  }
 }

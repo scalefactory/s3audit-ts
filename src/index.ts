@@ -64,46 +64,46 @@ class S3Audit extends Command {
                   new Listr([
                     {
                       title: 'BlockPublicAcls',
-                      task: (context: any, task: any) => this.checkPublicAccesBlockFor(task, bucket, 'BlockPublicAcls')
+                      task: (context: any, task: S3Audit.Types.ListrTask) => this.checkPublicAccesBlockFor(task, bucket, 'BlockPublicAcls')
                     },
                     {
                       title: 'IgnorePublicAcls',
-                      task: (context: any, task: any) => this.checkPublicAccesBlockFor(task, bucket, 'IgnorePublicAcls')
+                      task: (context: any, task: S3Audit.Types.ListrTask) => this.checkPublicAccesBlockFor(task, bucket, 'IgnorePublicAcls')
                     },
                     {
                       title: 'BlockPublicPolicy',
-                      task: (context: any, task: any) => this.checkPublicAccesBlockFor(task, bucket, 'BlockPublicPolicy')
+                      task: (context: any, task: S3Audit.Types.ListrTask) => this.checkPublicAccesBlockFor(task, bucket, 'BlockPublicPolicy')
                     },
                     {
                       title: 'RestrictPublicBuckets',
-                      task: (context: any, task: any) => this.checkPublicAccesBlockFor(task, bucket, 'RestrictPublicBuckets')
+                      task: (context: any, task: S3Audit.Types.ListrTask) => this.checkPublicAccesBlockFor(task, bucket, 'RestrictPublicBuckets')
                     }
                   ], this.listrOptions)
 
               },
               {
                 title: 'Server side encryption is enabled',
-                task: (context: any, task: any) => this.checkBucketEncryption(task, bucket)
+                task: (context: any, task: S3Audit.Types.ListrTask) => this.checkBucketEncryption(task, bucket)
               },
               {
                 title: 'Object versioning is enabled',
-                task: (context: any, task: any) => this.checkBucketVersioning(task, bucket)
+                task: (context: any, task: S3Audit.Types.ListrTask) => this.checkBucketVersioning(task, bucket)
               },
               {
                 title: 'Static website hosting is disabled',
-                task: (context: any, task: any) => this.checkBucketWebsite(task, bucket)
+                task: (context: any, task: S3Audit.Types.ListrTask) => this.checkBucketWebsite(task, bucket)
               },
               {
                 title: 'Bucket policy doesn\'t allow a wildcard entity',
-                task: (context: any, task: any) => this.checkThatBucketPolicyDoesntAllowWildcardEntity(task, bucket)
+                task: (context: any, task: S3Audit.Types.ListrTask) => this.checkThatBucketPolicyDoesntAllowWildcardEntity(task, bucket)
               },
               {
                 title: 'Bucket ACL doesn\'t allow access to "Everyone" or "Any authenticated AWS user"',
-                task: (context: any, task: any) => this.checkBucketAcl(task, bucket)
+                task: (context: any, task: S3Audit.Types.ListrTask) => this.checkBucketAcl(task, bucket)
               },
               {
                 title: 'Logging is enabled',
-                task: (context: any, task: any) => this.checkBucketLogging(task, bucket)
+                task: (context: any, task: S3Audit.Types.ListrTask) => this.checkBucketLogging(task, bucket)
               }
             ], this.listrOptions)
           }
@@ -119,7 +119,7 @@ class S3Audit extends Command {
     ]).run().catch((err: Error) => {})
   }
 
-  private async checkPublicAccesBlockFor(task: any, bucket: Bucket, setting: string) {
+  private async checkPublicAccesBlockFor(task: S3Audit.Types.ListrTask, bucket: Bucket, setting: string) {
     const publicAccessBlockConfiguration: S3Audit.Types.PublicAccessBlockConfiguration = await bucket.getPublicAccessConfiguration()
 
     if (publicAccessBlockConfiguration[setting] === false) {
@@ -129,7 +129,7 @@ class S3Audit extends Command {
     }
   }
 
-  private async checkBucketEncryption(task: any, bucket: Bucket) {
+  private async checkBucketEncryption(task: S3Audit.Types.ListrTask, bucket: Bucket) {
     const algorithm = await bucket.hasEncryptionEnabled()
 
     if (!algorithm) {
@@ -141,7 +141,7 @@ class S3Audit extends Command {
     task.message = `Encryption algorithm is ${algorithm}`
   }
 
-  private async checkBucketLogging(task: any, bucket: Bucket) {
+  private async checkBucketLogging(task: S3Audit.Types.ListrTask, bucket: Bucket) {
     const targetBucket = await bucket.hasLoggingEnabled()
 
     if (targetBucket === null) {
@@ -153,7 +153,7 @@ class S3Audit extends Command {
     task.message = `Logging to ${targetBucket}`
   }
 
-  private async checkBucketVersioning(task: any, bucket: Bucket) {
+  private async checkBucketVersioning(task: S3Audit.Types.ListrTask, bucket: Bucket) {
     const isEnabled = await bucket.hasVersioningEnabled()
 
     if (isEnabled === false) {
@@ -163,7 +163,7 @@ class S3Audit extends Command {
     }
   }
 
-  private async checkBucketWebsite(task: any, bucket: Bucket) {
+  private async checkBucketWebsite(task: S3Audit.Types.ListrTask, bucket: Bucket) {
     const isEnabled = await bucket.hasStaticWebsiteHosting()
 
     if (isEnabled === true) {
@@ -173,7 +173,7 @@ class S3Audit extends Command {
     }
   }
 
-  private async checkThatBucketPolicyDoesntAllowWildcardEntity(task: any, bucket: Bucket) {
+  private async checkThatBucketPolicyDoesntAllowWildcardEntity(task: S3Audit.Types.ListrTask, bucket: Bucket) {
     const statements = await bucket.getPolicyWildcardEntities()
 
     if (statements.length > 0) {
@@ -183,7 +183,7 @@ class S3Audit extends Command {
     }
   }
 
-  private async checkBucketAcl(task: any, bucket: Bucket) {
+  private async checkBucketAcl(task: S3Audit.Types.ListrTask, bucket: Bucket) {
     const allowsPublicAccess = await bucket.allowsPublicAccessViaACL()
 
     if (allowsPublicAccess === true) {
