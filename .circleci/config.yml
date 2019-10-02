@@ -1,0 +1,90 @@
+---
+version: 2.1
+jobs:
+  node-10: &test
+    docker:
+      - image: node:10.15.3
+    working_directory: ~/cli
+    steps: &steps
+      - checkout
+      - restore_cache: &restore_cache
+          keys:
+            - v1-npm-{{checksum ".circleci/config.yml"}}-{{checksum "package-lock.json"}}
+            - v1-npm-{{checksum ".circleci/config.yml"}}
+      - run:
+          name: Install dependencies
+          command: npm install
+      - run: ./bin/run --version
+      - run: ./bin/run --help
+  pack:
+    <<: *test
+    steps:
+      - checkout
+      - run: apt update && apt install dpkg-dev apt-utils -y
+      - restore_cache: &restore_cache
+          keys:
+            - v1-npm-{{checksum ".circleci/config.yml"}}-{{checksum "package-lock.json"}}
+            - v1-npm-{{checksum ".circleci/config.yml"}}
+      - run:
+          name: Install dependencies
+          command: npm install
+      - run: npm run prepack
+      - run: npx @oclif/dev-cli pack -t linux-x64
+      - run: npx @oclif/dev-cli pack:deb
+      - persist_to_workspace:
+          root: ~/cli
+          paths:
+            - dist
+  cache:
+    <<: *test
+    steps:
+      - checkout
+      - run:
+          name: Install dependencies
+          command: npm install
+      - save_cache:
+          key: v1-npm-{{checksum ".circleci/config.yml"}}-{{checksum "package-lock.json"}}
+          paths:
+            - ~/cli/node_modules
+            - ~/.npm
+            - /usr/local/lib/node_modules
+
+  publish-github-release:
+    docker:
+      - image: cibuilds/github:0.10
+    working_directory: ~/cli
+    steps:
+      - attach_workspace:
+          at: ~/cli
+      - run: ghr -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} -replace ${CIRCLE_TAG} ./dist/deb/
+      - run: ghr -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} -replace ${CIRCLE_TAG} ./dist/sf*
+
+workflows:
+  version: 2
+  "test":
+    jobs:
+      - node-10
+  "github-publish":
+    jobs:
+      - cache:
+          filters:
+            tags:
+              only: /^v.*/
+            branches:
+              ignore: /.*/
+      - pack:
+          requires:
+            - cache
+          filters:
+            tags:
+              only: /^v.*/
+            branches:
+              ignore: /.*/
+      - publish-github-release:
+          requires:
+            - pack
+          filters:
+            tags:
+              only: /^v.*/
+            branches:
+              ignore: /.*/
