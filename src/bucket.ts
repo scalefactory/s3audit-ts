@@ -4,6 +4,8 @@ import {S3Audit} from './@types'
 
 export default class Bucket {
   public name: string
+
+  private bucketVersioning?: S3.Types.GetBucketVersioningOutput
   private publicAccessConfiguration?: S3Audit.Types.PublicAccessBlockConfiguration
   private requestProperties: S3Audit.Types.S3RequestProperties
   private s3: S3
@@ -142,6 +144,19 @@ export default class Bucket {
     })
   }
 
+  public async hasMFADeleteEnabled(): Promise<any> {
+    return new Promise(resolve => {
+      this.getBucketVersioning()
+        .then((data: S3.Types.GetBucketVersioningOutput) => {
+          if (data === null || data.MFADelete !== 'Enabled') {
+            return resolve(false)
+          }
+
+          resolve(true)
+        })
+    })
+  }
+
   public async hasStaticWebsiteHosting(): Promise<any> {
     return new Promise(resolve => {
       this.s3.getBucketWebsite(this.requestProperties, (error: Object, data: S3.Types.GetBucketWebsiteOutput) => {
@@ -156,12 +171,27 @@ export default class Bucket {
 
   public async hasVersioningEnabled(): Promise<any> {
     return new Promise(resolve => {
-      this.s3.getBucketVersioning(this.requestProperties, (error: Object, data: S3.Types.GetBucketVersioningOutput) => {
-        if (data === null || data.Status !== 'Enabled') {
-          return resolve(false)
-        }
+      this.getBucketVersioning()
+        .then((data: S3.Types.GetBucketVersioningOutput) => {
+          if (data === null || data.Status !== 'Enabled') {
+            return resolve(false)
+          }
 
-        resolve(true)
+          resolve(true)
+        })
+    })
+  }
+
+  private async getBucketVersioning(): Promise<S3.Types.GetBucketVersioningOutput> {
+    return new Promise(resolve => {
+      if (this.bucketVersioning !== undefined) {
+        return resolve(this.bucketVersioning)
+      }
+
+      this.s3.getBucketVersioning(this.requestProperties, (error: Object, data: S3.Types.GetBucketVersioningOutput) => {
+        this.bucketVersioning = data
+
+        resolve(data)
       })
     })
   }

@@ -90,6 +90,10 @@ class S3Audit extends Command {
                 task: (context: any, task: S3Audit.Types.ListrTask) => this.checkBucketVersioning(task, bucket)
               },
               {
+                title: 'MFA Delete is enabled',
+                task: (context: any, task: S3Audit.Types.ListrTask) => this.checkMFADelete(task, bucket)
+              },
+              {
                 title: 'Static website hosting is disabled',
                 task: (context: any, task: S3Audit.Types.ListrTask) => this.checkBucketWebsite(task, bucket)
               },
@@ -188,6 +192,16 @@ class S3Audit extends Command {
 
     if (allowsPublicAccess === true) {
       task.title = 'Bucket allows public access via ACL'
+
+      throw new Error()
+    }
+  }
+
+  private async checkMFADelete(task: S3Audit.Types.ListrTask, bucket: Bucket) {
+    const isEnabled = await bucket.hasMFADeleteEnabled()
+
+    if (isEnabled === false) {
+      task.title = 'MFA Delete is not enabled'
 
       throw new Error()
     }
