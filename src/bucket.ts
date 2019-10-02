@@ -1,4 +1,4 @@
-import {S3} from 'aws-sdk'
+import {AWSError, S3} from 'aws-sdk'
 
 import {S3Audit} from './@types'
 
@@ -17,8 +17,12 @@ export default class Bucket {
   }
 
   public async allowsPublicAccessViaACL(): Promise<any> {
-    return new Promise(resolve => {
-      this.s3.getBucketAcl(this.requestProperties, (error: Object, data: S3.Types.GetBucketAclOutput) => {
+    return new Promise((resolve, reject) => {
+      this.s3.getBucketAcl(this.requestProperties, (error: AWSError, data: S3.Types.GetBucketAclOutput) => {
+        if (error !== null) {
+          return reject(error)
+        }
+
         if (data === null || ! Array.isArray(data.Grants) || data.Grants.length === 0) {
           return resolve(false)
         }
@@ -40,12 +44,16 @@ export default class Bucket {
   }
 
   public async getPublicAccessConfiguration(): Promise<any> {
-    return new Promise(resolve => {
+    return new Promise((resolve, reject) => {
       if (this.publicAccessConfiguration !== undefined) {
         return resolve(this.publicAccessConfiguration)
       }
 
-      this.s3.getPublicAccessBlock(this.requestProperties, (error: Object, data: S3.Types.GetPublicAccessBlockOutput) => {
+      this.s3.getPublicAccessBlock(this.requestProperties, (error: AWSError, data: S3.Types.GetPublicAccessBlockOutput) => {
+        if (error !== null && error.code !== 'NoSuchPublicAccessBlockConfiguration') {
+          return reject(error)
+        }
+
         const defaultConfig: S3Audit.Types.PublicAccessBlockConfiguration = {
           BlockPublicAcls: false,
           BlockPublicPolicy: false,
@@ -62,8 +70,12 @@ export default class Bucket {
   }
 
   public async getPolicyWildcardEntities(): Promise<any> {
-    return new Promise(resolve => {
-      this.s3.getBucketPolicy(this.requestProperties, (error: Object, data: S3.Types.GetBucketPolicyOutput) => {
+    return new Promise((resolve, reject) => {
+      this.s3.getBucketPolicy(this.requestProperties, (error: AWSError, data: S3.Types.GetBucketPolicyOutput) => {
+        if (error !== null && error.code !== 'NoSuchBucketPolicy') {
+          return reject(error)
+        }
+
         if (data === null || data.Policy === undefined) {
           return resolve([])
         }
@@ -115,8 +127,12 @@ export default class Bucket {
   }
 
   public async hasEncryptionEnabled(): Promise<any> {
-    return new Promise(resolve => {
-      this.s3.getBucketEncryption(this.requestProperties, (error: Object, data: S3.Types.GetBucketEncryptionOutput) => {
+    return new Promise((resolve, reject) => {
+      this.s3.getBucketEncryption(this.requestProperties, (error: AWSError, data: S3.Types.GetBucketEncryptionOutput) => {
+        if (error !== null && error.code !== 'ServerSideEncryptionConfigurationNotFoundError') {
+          return reject(error)
+        }
+
         if (data === null || data.ServerSideEncryptionConfiguration === undefined || data.ServerSideEncryptionConfiguration.Rules[0].ApplyServerSideEncryptionByDefault === undefined) {
           return resolve(false)
         }
@@ -129,7 +145,7 @@ export default class Bucket {
   }
 
   public async hasMFADeleteEnabled(): Promise<any> {
-    return new Promise(resolve => {
+    return new Promise((resolve, reject) => {
       this.getBucketVersioning()
         .then((data: S3.Types.GetBucketVersioningOutput) => {
           if (data === null || data.MFADelete !== 'Enabled') {
@@ -138,12 +154,19 @@ export default class Bucket {
 
           resolve(true)
         })
+        .catch((error: AWSError) => {
+          reject(error)
+        })
     })
   }
 
   public async hasStaticWebsiteHosting(): Promise<any> {
-    return new Promise(resolve => {
-      this.s3.getBucketWebsite(this.requestProperties, (error: Object, data: S3.Types.GetBucketWebsiteOutput) => {
+    return new Promise((resolve, reject) => {
+      this.s3.getBucketWebsite(this.requestProperties, (error: AWSError, data: S3.Types.GetBucketWebsiteOutput) => {
+        if (error !== null && error.code !== 'NoSuchWebsiteConfiguration') {
+          return reject(error)
+        }
+
         if (data === null) {
           return resolve(false)
         }
@@ -154,7 +177,7 @@ export default class Bucket {
   }
 
   public async hasVersioningEnabled(): Promise<any> {
-    return new Promise(resolve => {
+    return new Promise((resolve, reject) => {
       this.getBucketVersioning()
         .then((data: S3.Types.GetBucketVersioningOutput) => {
           if (data === null || data.Status !== 'Enabled') {
@@ -163,12 +186,19 @@ export default class Bucket {
 
           resolve(true)
         })
+        .catch((error: AWSError) => {
+          reject(error)
+        })
     })
   }
 
   public async getLoggingTargetBucket(): Promise<any> {
-    return new Promise(resolve => {
-      this.s3.getBucketLogging(this.requestProperties, (error: Object, data: S3.Types.GetBucketLoggingOutput) => {
+    return new Promise((resolve, reject) => {
+      this.s3.getBucketLogging(this.requestProperties, (error: AWSError, data: S3.Types.GetBucketLoggingOutput) => {
+        if (error !== null) {
+          return reject(error)
+        }
+
         if (data === null || data.LoggingEnabled === undefined) {
           return resolve(null)
         }
@@ -183,12 +213,16 @@ export default class Bucket {
   }
 
   private async getBucketVersioning(): Promise<S3.Types.GetBucketVersioningOutput> {
-    return new Promise(resolve => {
+    return new Promise((resolve, reject) => {
       if (this.bucketVersioning !== undefined) {
         return resolve(this.bucketVersioning)
       }
 
-      this.s3.getBucketVersioning(this.requestProperties, (error: Object, data: S3.Types.GetBucketVersioningOutput) => {
+      this.s3.getBucketVersioning(this.requestProperties, (error: AWSError, data: S3.Types.GetBucketVersioningOutput) => {
+        if (error !== null) {
+          return reject(error)
+        }
+
         this.bucketVersioning = data
 
         resolve(data)

@@ -20,5 +20,6 @@ export declare module S3Audit.Types {
   export interface ListrTask {
     title: string
     message: string
+    skip(reason: string): void
   }
 }

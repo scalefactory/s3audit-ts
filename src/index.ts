@@ -1,5 +1,5 @@
 import {Command, flags} from '@oclif/command'
-import {S3} from 'aws-sdk'
+import {AWSError, S3} from 'aws-sdk'
 
 import {S3Audit} from './@types'
 import Bucket from './bucket'
@@ -34,7 +34,7 @@ class S3Audit extends Command {
       return this.auditBuckets([new Bucket(flags.bucket)])
     }
 
-    new S3().listBuckets((error: Object, data?: S3.Types.ListBucketsOutput) => {
+    new S3().listBuckets((error: AWSError, data?: S3.Types.ListBucketsOutput) => {
       if (!data || data.Buckets === undefined) {
         return this.exit()
       }
@@ -120,13 +120,16 @@ class S3Audit extends Command {
         title: `Checking ${buckets.length} bucket${buckets.length === 1 ? '' : 's'}`,
         task: () => tasks
       }
-    ]).run().catch((err: Error) => {})
+    ], this.listrOptions).run().catch((err: Error) => {})
   }
 
   private async checkPublicAccesBlockFor(task: S3Audit.Types.ListrTask, bucket: Bucket, setting: string) {
     const publicAccessBlockConfiguration: S3Audit.Types.PublicAccessBlockConfiguration = await bucket.getPublicAccessConfiguration()
+      .catch((error: AWSError) => {
+        task.skip(error.message)
+      })
 
-    if (publicAccessBlockConfiguration[setting] === false) {
+    if (publicAccessBlockConfiguration !== undefined && publicAccessBlockConfiguration[setting] === false) {
       task.title = `${setting} is set to false`
 
       throw new Error()
@@ -134,19 +137,26 @@ class S3Audit extends Command {
   }
 
   private async checkBucketEncryption(task: S3Audit.Types.ListrTask, bucket: Bucket) {
-    const algorithm = await bucket.hasEncryptionEnabled()
+    bucket.hasEncryptionEnabled()
+      .then((algorithm?: string) => {
+        if (!algorithm) {
+          task.title = 'Server side encryption is not enabled'
 
-    if (!algorithm) {
-      task.title = 'Server side encryption is not enabled'
+          throw new Error()
+        }
 
-      throw new Error()
-    }
-
-    task.message = `Encryption algorithm is ${algorithm}`
+        task.message = `Encryption algorithm is ${algorithm}`
+      })
+      .catch((error: AWSError) => {
+        task.skip(error.message)
+      })
   }
 
   private async checkBucketLogging(task: S3Audit.Types.ListrTask, bucket: Bucket) {
     const targetBucket = await bucket.getLoggingTargetBucket()
+      .catch((error: AWSError) => {
+        task.skip(error.message)
+      })
 
     if (targetBucket === null) {
       task.title = 'Logging is not enabled'
@@ -159,6 +169,9 @@ class S3Audit extends Command {
 
   private async checkBucketVersioning(task: S3Audit.Types.ListrTask, bucket: Bucket) {
     const isEnabled = await bucket.hasVersioningEnabled()
+      .catch((error: AWSError) => {
+        task.skip(error.message)
+      })
 
     if (isEnabled === false) {
       task.title = 'Object versioning is not enabled'
@@ -169,6 +182,9 @@ class S3Audit extends Command {
 
   private async checkBucketWebsite(task: S3Audit.Types.ListrTask, bucket: Bucket) {
     const isEnabled = await bucket.hasStaticWebsiteHosting()
+      .catch((error: AWSError) => {
+        task.skip(error.message)
+      })
 
     if (isEnabled === true) {
       task.title = 'Static website hosting is enabled'
@@ -179,8 +195,11 @@ class S3Audit extends Command {
 
   private async checkThatBucketPolicyDoesntAllowWildcardEntity(task: S3Audit.Types.ListrTask, bucket: Bucket) {
     const statements = await bucket.getPolicyWildcardEntities()
+      .catch((error: AWSError) => {
+        task.skip(error.message)
+      })
 
-    if (statements.length > 0) {
+    if (Array.isArray(statements) && statements.length > 0) {
       task.message = `Bucket has ${statements.length} statement${statements.length === 1 ? '' : 's'} with wildcard entities`
 
       throw new Error()
@@ -189,6 +208,9 @@ class S3Audit extends Command {
 
   private async checkBucketAcl(task: S3Audit.Types.ListrTask, bucket: Bucket) {
     const allowsPublicAccess = await bucket.allowsPublicAccessViaACL()
+      .catch((error: AWSError) => {
+        task.skip(error.message)
+      })
 
     if (allowsPublicAccess === true) {
       task.title = 'Bucket allows public access via ACL'
@@ -199,6 +221,9 @@ class S3Audit extends Command {
 
   private async checkMFADelete(task: S3Audit.Types.ListrTask, bucket: Bucket) {
     const isEnabled = await bucket.hasMFADeleteEnabled()
+      .catch((error: AWSError) => {
+        task.skip(error.message)
+      })
 
     if (isEnabled === false) {
       task.title = 'MFA Delete is not enabled'
