@@ -11,6 +11,9 @@ Checks the settings for all S3 buckets in an AWS account for public access
 * [Usage](#usage)
 <!-- tocstop -->
 
+For an introduction, read
+[Securing S3 buckets with s3audit](https://medium.com/the-scale-factory/securing-s3-buckets-with-s3audit-a8cb989cb861)
+
 # Install
 <!-- install -->
 Download and install the [latest release from GitHub](https://github.com/scalefactory/s3audit/releases)
