@@ -5,6 +5,10 @@ export declare module S3Audit.Types {
     name: string
   }
 
+  export interface Formatter {
+    run(buckets: Array<Bucket>): void
+  }
+
   export interface PublicAccessBlockConfiguration {
     [propName: string]: any;
     BlockPublicAcls?: boolean
