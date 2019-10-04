@@ -6,7 +6,7 @@ import Bucket from '../bucket'
 export default class Csv implements S3Audit.Types.Formatter {
   private output: any
 
-  private fields = {
+  private fields: S3Audit.Types.CSVFields = {
     name: 'Bucket name',
     BlockPublicAcls: 'BlockPublicAcls is enabled',
     BlockPublicPolicy: 'BlockPublicPolicy is enabled',
@@ -29,7 +29,7 @@ export default class Csv implements S3Audit.Types.Formatter {
     this.output(Object.values(this.fields).join(','))
 
     buckets.forEach(async bucket => {
-      const bucketDetails: any = {name: bucket.name}
+      const bucketDetails: S3Audit.Types.CSVFields = {name: bucket.name}
 
       Promise.all([
         this.populatePublicAccessConfiguration(bucket, bucketDetails),
@@ -52,7 +52,7 @@ export default class Csv implements S3Audit.Types.Formatter {
     })
   }
 
-  private populatePublicAccessConfiguration(bucket: Bucket, bucketDetails: any) {
+  private populatePublicAccessConfiguration(bucket: Bucket, bucketDetails: S3Audit.Types.CSVFields) {
     return new Promise(resolve => {
       bucket.getPublicAccessConfiguration()
         .then((bucketPublicAccessBlock: S3Audit.Types.PublicAccessBlockConfiguration) => {
@@ -70,7 +70,7 @@ export default class Csv implements S3Audit.Types.Formatter {
     })
   }
 
-  private populateSSEField(bucket: Bucket, bucketDetails: any) {
+  private populateSSEField(bucket: Bucket, bucketDetails: S3Audit.Types.CSVFields) {
     return new Promise(resolve => {
       bucket.getSSEAlgorithm()
         .then((algorithm: string) => {
@@ -83,7 +83,7 @@ export default class Csv implements S3Audit.Types.Formatter {
     })
   }
 
-  private populateLoggingField(bucket: Bucket, bucketDetails: any) {
+  private populateLoggingField(bucket: Bucket, bucketDetails: S3Audit.Types.CSVFields) {
     return new Promise(resolve => {
       bucket.getLoggingTargetBucket()
         .then((bucket: string) => {
@@ -96,7 +96,7 @@ export default class Csv implements S3Audit.Types.Formatter {
     })
   }
 
-  private populateVersioningField(bucket: Bucket, bucketDetails: any) {
+  private populateVersioningField(bucket: Bucket, bucketDetails: S3Audit.Types.CSVFields) {
     return new Promise(resolve => {
       bucket.hasVersioningEnabled()
         .then((isEnabled: boolean) => {
@@ -109,7 +109,7 @@ export default class Csv implements S3Audit.Types.Formatter {
     })
   }
 
-  private populateStaticWebsiteField(bucket: Bucket, bucketDetails: any) {
+  private populateStaticWebsiteField(bucket: Bucket, bucketDetails: S3Audit.Types.CSVFields) {
     return new Promise(resolve => {
       bucket.hasStaticWebsiteHosting()
         .then((isEnabled: boolean) => {
@@ -122,7 +122,7 @@ export default class Csv implements S3Audit.Types.Formatter {
     })
   }
 
-  private populatePolicyField(bucket: Bucket, bucketDetails: any) {
+  private populatePolicyField(bucket: Bucket, bucketDetails: S3Audit.Types.CSVFields) {
     return new Promise(resolve => {
       bucket.getPolicyWildcardEntities()
         .then((entities: Array<string>) => {
@@ -135,7 +135,7 @@ export default class Csv implements S3Audit.Types.Formatter {
     })
   }
 
-  private populateACLField(bucket: Bucket, bucketDetails: any) {
+  private populateACLField(bucket: Bucket, bucketDetails: S3Audit.Types.CSVFields) {
     return new Promise(resolve => {
       bucket.allowsPublicAccessViaACL()
         .then((isAllowed: boolean) => {
@@ -147,7 +147,7 @@ export default class Csv implements S3Audit.Types.Formatter {
         .finally(() => resolve())
     })
   }
-  private populateMFADeleteField(bucket: Bucket, bucketDetails: any) {
+  private populateMFADeleteField(bucket: Bucket, bucketDetails: S3Audit.Types.CSVFields) {
     return new Promise(resolve => {
       bucket.hasMFADeleteEnabled()
         .then((isEnabled: boolean) => {

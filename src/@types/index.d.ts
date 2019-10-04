@@ -5,6 +5,22 @@ export declare module S3Audit.Types {
     name: string
   }
 
+  export interface CSVFields {
+    [propName: string]: any;
+    name?: string,
+    BlockPublicAcls?: string | string | boolean,
+    BlockPublicPolicy?: string | boolean,
+    RestrictPublicBuckets?: string | boolean,
+    IgnorePublicAcls?: string | boolean,
+    sse?: string,
+    versioning?: string | boolean,
+    mfa_delete?: string | boolean,
+    static_website?: string | boolean,
+    bucket_policy?: string | boolean,
+    bucket_acl?: string | boolean,
+    logging?: string,
+  }
+
   export interface Formatter {
     run(buckets: Array<Bucket>): void
   }
