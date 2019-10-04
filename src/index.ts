@@ -5,6 +5,7 @@ import {S3Audit} from './@types'
 import Bucket from './bucket'
 
 import {default as ConsoleFormatter} from './formatters/console'
+import {default as CsvFormmater} from './formatters/csv'
 
 class S3Audit extends Command {
   static description = 'Audits S3 bucket settings'
@@ -19,7 +20,7 @@ class S3Audit extends Command {
     format: flags.string({
       description: 'The output format to use',
       default: 'console',
-      options: ['console']
+      options: ['console', 'csv']
     }),
 
     version: flags.version({char: 'v'}),
@@ -54,8 +55,14 @@ class S3Audit extends Command {
     let formatter: S3Audit.Types.Formatter
 
     switch (format) {
-      default:
-        formatter = new ConsoleFormatter()
+    case 'csv':
+      formatter = new CsvFormmater((output: string) => {
+        this.log(output)
+      })
+
+      break
+    default:
+      formatter = new ConsoleFormatter()
     }
 
     formatter.run(buckets)
