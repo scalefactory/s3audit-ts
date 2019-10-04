@@ -127,19 +127,17 @@ export default class Bucket {
             continue
           }
 
-          if (statement.Principal === '*') {
+          if (statement.Principal === '*' || statement.Principal.AWS === '*') {
             statements.push(statement)
 
             continue
           }
 
-          if (Array.isArray(statement.Principal)) {
-            for (let principal of statement.Principal) {
-              if (principal === '*') {
-                statements.push(statement)
+          if (Array.isArray(statement.Principal.AWS)) {
+            const index = statement.Principal.AWS.indexOf('*')
 
-                continue
-              }
+            if (index > -1) {
+              statements.push(statement.Principal.AWS[index])
             }
           }
 
