@@ -1,6 +1,7 @@
+import {AWSError} from 'aws-sdk'
+
 import {S3Audit} from '../@types'
 import Bucket from '../bucket'
-import { bool } from 'aws-sdk/clients/signer'
 
 export default class Csv implements S3Audit.Types.Formatter {
   private output: any
@@ -31,37 +32,14 @@ export default class Csv implements S3Audit.Types.Formatter {
       const bucketDetails: any = {name: bucket.name}
 
       Promise.all([
-        bucket.getPublicAccessConfiguration().then((bucketPublicAccessBlock: S3Audit.Types.PublicAccessBlockConfiguration) => {
-          Object.assign(bucketDetails, bucketPublicAccessBlock)
-        }),
-
-        bucket.getSSEAlgorithm().then((algorithm: string) => {
-          bucketDetails.sse = algorithm || 'None'
-        }),
-
-        bucket.getLoggingTargetBucket().then((bucket: string) => {
-          bucketDetails.logging = bucket || 'Disabled'
-        }),
-
-        bucket.hasVersioningEnabled().then((isEnabled: bool) => {
-          bucketDetails.versioning = isEnabled
-        }),
-
-        bucket.hasStaticWebsiteHosting().then((isEnabled: bool) => {
-          bucketDetails.static_website = isEnabled
-        }),
-
-        bucket.getPolicyWildcardEntities().then((entities: Array<string>) => {
-          bucketDetails.bucket_policy = entities.length > 0
-        }),
-
-        bucket.allowsPublicAccessViaACL().then((isAllowed: bool) => {
-          bucketDetails.bucket_acl = isAllowed
-        }),
-
-        bucket.hasMFADeleteEnabled().then((isEnabled: bool) => {
-          bucketDetails.mfa_delete = isEnabled
-        })
+        this.populatePublicAccessConfiguration(bucket, bucketDetails),
+        this.populateSSEField(bucket, bucketDetails),
+        this.populateLoggingField(bucket, bucketDetails),
+        this.populateVersioningField(bucket, bucketDetails),
+        this.populateStaticWebsiteField(bucket, bucketDetails),
+        this.populatePolicyField(bucket, bucketDetails),
+        this.populateACLField(bucket, bucketDetails),
+        this.populateMFADeleteField(bucket, bucketDetails)
       ]).then(() => {
         const output: Array<string> = []
 
@@ -71,6 +49,114 @@ export default class Csv implements S3Audit.Types.Formatter {
 
         this.output(output.join(','))
       })
+    })
+  }
+
+  private populatePublicAccessConfiguration(bucket: Bucket, bucketDetails: any) {
+    return new Promise(resolve => {
+      bucket.getPublicAccessConfiguration()
+        .then((bucketPublicAccessBlock: S3Audit.Types.PublicAccessBlockConfiguration) => {
+          Object.assign(bucketDetails, bucketPublicAccessBlock)
+        })
+        .catch((error: AWSError) => {
+          Object.assign(bucketDetails, {
+            BlockPublicAcls: error.message,
+            BlockPublicPolicy: error.message,
+            RestrictPublicBuckets: error.message,
+            IgnorePublicAcls: error.message
+          })
+        })
+        .finally(() => resolve())
+    })
+  }
+
+  private populateSSEField(bucket: Bucket, bucketDetails: any) {
+    return new Promise(resolve => {
+      bucket.getSSEAlgorithm()
+        .then((algorithm: string) => {
+          bucketDetails.sse = algorithm || 'Disabled'
+        })
+        .catch((error: AWSError) => {
+          bucketDetails.sse = error.message
+        })
+        .finally(() => resolve())
+    })
+  }
+
+  private populateLoggingField(bucket: Bucket, bucketDetails: any) {
+    return new Promise(resolve => {
+      bucket.getLoggingTargetBucket()
+        .then((bucket: string) => {
+          bucketDetails.logging = bucket || 'Disabled'
+        })
+        .catch((error: AWSError) => {
+          bucketDetails.logging = error.message
+        })
+        .finally(() => resolve())
+    })
+  }
+
+  private populateVersioningField(bucket: Bucket, bucketDetails: any) {
+    return new Promise(resolve => {
+      bucket.hasVersioningEnabled()
+        .then((isEnabled: boolean) => {
+          bucketDetails.versioning = isEnabled
+        })
+        .catch((error: AWSError) => {
+          bucketDetails.versioning = error.message
+        })
+        .finally(() => resolve())
+    })
+  }
+
+  private populateStaticWebsiteField(bucket: Bucket, bucketDetails: any) {
+    return new Promise(resolve => {
+      bucket.hasStaticWebsiteHosting()
+        .then((isEnabled: boolean) => {
+          bucketDetails.static_website = isEnabled
+        })
+        .catch((error: AWSError) => {
+          bucketDetails.static_website = error.message
+        })
+        .finally(() => resolve())
+    })
+  }
+
+  private populatePolicyField(bucket: Bucket, bucketDetails: any) {
+    return new Promise(resolve => {
+      bucket.getPolicyWildcardEntities()
+        .then((entities: Array<string>) => {
+          bucketDetails.bucket_policy = entities.length > 0
+        })
+        .catch((error: AWSError) => {
+          bucketDetails.bucket_policy = error.message
+        })
+        .finally(() => resolve())
+    })
+  }
+
+  private populateACLField(bucket: Bucket, bucketDetails: any) {
+    return new Promise(resolve => {
+      bucket.allowsPublicAccessViaACL()
+        .then((isAllowed: boolean) => {
+          bucketDetails.bucket_acl = isAllowed
+        })
+        .catch((error: AWSError) => {
+          bucketDetails.bucket_acl = error.message
+        })
+        .finally(() => resolve())
+    })
+  }
+  private populateMFADeleteField(bucket: Bucket, bucketDetails: any) {
+    return new Promise(resolve => {
+      bucket.hasMFADeleteEnabled()
+        .then((isEnabled: boolean) => {
+          bucketDetails.mfa_delete = isEnabled
+        })
+        .catch((error: AWSError) => {
+          bucketDetails.mfa_delete = error.message
+        })
+        .finally(() => resolve())
     })
   }
 }
