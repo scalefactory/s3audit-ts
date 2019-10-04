@@ -148,12 +148,10 @@ export default class Bucket {
           }
 
           if (Array.isArray(statement.Action)) {
-            for (let action of statement.Action) {
-              if (action === '*') {
-                statements.push(statement)
+            const index = statement.Action.indexOf('*')
 
-                continue
-              }
+            if (index > -1) {
+              statements.push(statement.Action[index])
             }
           }
         }
