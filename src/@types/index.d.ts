@@ -19,6 +19,7 @@ export declare module S3Audit.Types {
     bucket_policy?: string | boolean,
     bucket_acl?: string | boolean,
     logging?: string,
+    cloudfront?: string
   }
 
   export interface Formatter {

@@ -18,7 +18,8 @@ export default class Csv implements S3Audit.Types.Formatter {
     static_website: 'Static website hosting is disabled',
     bucket_policy: 'Bucket policy doesn\'t allow a wildcard entity',
     bucket_acl: 'Bucket ACL doesn\'t allow public access',
-    logging: 'Bucket logging target bucket'
+    logging: 'Bucket logging target bucket',
+    cloudfront: 'CloudFront Origin Access Identities'
   }
 
   constructor(output: any) {
@@ -39,7 +40,8 @@ export default class Csv implements S3Audit.Types.Formatter {
         this.populateStaticWebsiteField(bucket, bucketDetails),
         this.populatePolicyField(bucket, bucketDetails),
         this.populateACLField(bucket, bucketDetails),
-        this.populateMFADeleteField(bucket, bucketDetails)
+        this.populateMFADeleteField(bucket, bucketDetails),
+        this.populateCloudfrontField(bucket, bucketDetails)
       ]).then(() => {
         const output: Array<string> = []
 
@@ -147,6 +149,7 @@ export default class Csv implements S3Audit.Types.Formatter {
         .finally(() => resolve())
     })
   }
+
   private populateMFADeleteField(bucket: Bucket, bucketDetails: S3Audit.Types.CSVFields) {
     return new Promise(resolve => {
       bucket.hasMFADeleteEnabled()
@@ -155,6 +158,21 @@ export default class Csv implements S3Audit.Types.Formatter {
         })
         .catch((error: AWSError) => {
           bucketDetails.mfa_delete = error.message
+        })
+        .finally(() => resolve())
+    })
+  }
+
+  private populateCloudfrontField(bucket: Bucket, bucketDetails: S3Audit.Types.CSVFields) {
+    return new Promise(resolve => {
+      bucket.getCloudFrontOriginAccessIdentities()
+        .then((identities: Array<string>) => {
+          bucketDetails.cloudfront = identities.length === 0 ?
+            'None'
+            : identities.join(', ')
+        })
+        .catch((error: AWSError) => {
+          bucketDetails.cloudfront = error.message
         })
         .finally(() => resolve())
     })
