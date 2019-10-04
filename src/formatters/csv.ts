@@ -128,7 +128,7 @@ export default class Csv implements S3Audit.Types.Formatter {
     return new Promise(resolve => {
       bucket.getPolicyWildcardEntities()
         .then((entities: Array<string>) => {
-          bucketDetails.bucket_policy = entities.length > 0
+          bucketDetails.bucket_policy = entities.length === 0
         })
         .catch((error: AWSError) => {
           bucketDetails.bucket_policy = error.message
@@ -140,8 +140,8 @@ export default class Csv implements S3Audit.Types.Formatter {
   private populateACLField(bucket: Bucket, bucketDetails: S3Audit.Types.CSVFields) {
     return new Promise(resolve => {
       bucket.allowsPublicAccessViaACL()
-        .then((isAllowed: boolean) => {
-          bucketDetails.bucket_acl = isAllowed
+        .then((isPublic: boolean) => {
+          bucketDetails.bucket_acl = isPublic === false
         })
         .catch((error: AWSError) => {
           bucketDetails.bucket_acl = error.message
