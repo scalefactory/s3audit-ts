@@ -12,6 +12,12 @@ class S3Audit extends Command {
 
   static args = []
 
+  static examples = [
+    '$ s3audit',
+    '$ s3audit --bucket=s3-bucket=name',
+    '$ s3audit --format=csv',
+  ]
+
   static flags = {
     bucket: flags.string({
       description: 'The name of a bucket to target'
@@ -26,6 +32,8 @@ class S3Audit extends Command {
     version: flags.version({char: 'v'}),
     help: flags.help({char: 'h'}),
   }
+
+  static usage = 's3audit --bucket=s3-bucket-name --output=csv'
 
   async run() {
     const {flags} = this.parse(S3Audit)
