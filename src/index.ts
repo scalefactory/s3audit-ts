@@ -16,6 +16,12 @@ class S3Audit extends Command {
       description: 'The name of a bucket to target'
     }),
 
+    format: flags.string({
+      description: 'The output format to use',
+      default: 'console',
+      options: ['console']
+    }),
+
     version: flags.version({char: 'v'}),
     help: flags.help({char: 'h'}),
   }
@@ -23,9 +29,10 @@ class S3Audit extends Command {
   async run() {
     const {flags} = this.parse(S3Audit)
     const buckets: Bucket[] = []
+    const format: string = flags.format
 
     if (flags.bucket) {
-      return this.auditBuckets([new Bucket(flags.bucket)])
+      return this.auditBuckets(format, [new Bucket(flags.bucket)])
     }
 
     new S3().listBuckets((error: AWSError, data?: S3.Types.ListBucketsOutput) => {
@@ -39,12 +46,19 @@ class S3Audit extends Command {
         }
       })
 
-      this.auditBuckets(buckets)
+      this.auditBuckets(format, buckets)
     })
   }
 
-  private auditBuckets(buckets: Array<Bucket>) {
-    new ConsoleFormatter().run(buckets)
+  private auditBuckets(format: string, buckets: Array<Bucket>) {
+    let formatter: S3Audit.Types.Formatter
+
+    switch (format) {
+      default:
+        formatter = new ConsoleFormatter()
+    }
+
+    formatter.run(buckets)
   }
 }
 
