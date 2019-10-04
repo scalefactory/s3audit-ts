@@ -183,6 +183,7 @@ export default class Console implements S3Audit.Types.Formatter {
       })
 
     if (Array.isArray(statements) && statements.length > 0) {
+      task.title = 'Bucket policy contains wildcard entities'
       task.output = `Bucket has ${statements.length} statement${statements.length === 1 ? '' : 's'} with wildcard entities`
 
       throw new Error()
