@@ -30,14 +30,14 @@ jobs:
           command: npm install
       - run:
           name: Authenticate with registry
-          command: echo "//registry.npmjs.org/:_authToken=$NPM_TOKEN" > ~/cli/.npmrc
+          command: echo "//registry.npmjs.org/:_authToken=$NPM_TOKEN" > ~/.npmrc
+      - run: npm run prepack
       - run:
           name: Publish package
           command: npm publish
       - run:
           name: Remove .npmrc
-          command: rm .npmrc
-      - run: npm run prepack
+          command: rm ~/.npmrc
       - run: npx @oclif/dev-cli pack -t linux-x64
       - run: npx @oclif/dev-cli pack:deb
       - persist_to_workspace:
