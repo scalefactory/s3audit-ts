@@ -43,6 +43,45 @@ export default class Bucket {
     })
   }
 
+  public async getCloudFrontOriginAccessIdentities(): Promise<any> {
+    const cloudfrontPrefix = 'arn:aws:iam::cloudfront:user/CloudFront Origin Access Identity '
+
+    return new Promise((resolve, reject) => {
+      this.s3.getBucketPolicy(this.requestProperties, (error: AWSError, data: S3.Types.GetBucketPolicyOutput) => {
+        if (error !== null && error.code !== 'NoSuchBucketPolicy') {
+          return reject(error)
+        }
+
+        if (data === null || data.Policy === undefined) {
+          return resolve([])
+        }
+
+        const policy = JSON.parse(data.Policy)
+        const identities: Array<string> = []
+
+        for (let statement of policy.Statement) {
+          if (statement.Principal === undefined || statement.Principal.AWS === undefined) {
+            continue
+          }
+
+          const principals = Array.isArray(statement.Principal.AWS) ?
+            statement.Principal.AWS
+            : [statement.Principal.AWS]
+
+          for (let principal of principals) {
+            if (principal.indexOf(cloudfrontPrefix) === 0) {
+              const identity = principal.replace(cloudfrontPrefix, '')
+
+              identities.push(identity)
+            }
+          }
+        }
+
+        resolve(identities)
+      })
+    })
+  }
+
   public async getPublicAccessConfiguration(): Promise<any> {
     return new Promise((resolve, reject) => {
       if (this.publicAccessConfiguration !== undefined) {

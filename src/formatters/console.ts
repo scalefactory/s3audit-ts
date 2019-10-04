@@ -71,6 +71,10 @@ export default class Console implements S3Audit.Types.Formatter {
               {
                 title: 'Logging is enabled',
                 task: (context: any, task: S3Audit.Types.ListrTask) => this.checkBucketLogging(task, bucket)
+              },
+              {
+                title: 'CloudFront Distributions',
+                task: (context: any, task: S3Audit.Types.ListrTask) => this.checkCloudFrontDistributions(task, bucket)
               }
             ], this.listrOptions)
           }
@@ -154,6 +158,22 @@ export default class Console implements S3Audit.Types.Formatter {
 
       throw new Error()
     }
+  }
+
+  private async checkCloudFrontDistributions(task: S3Audit.Types.ListrTask, bucket: Bucket) {
+    bucket.getCloudFrontOriginAccessIdentities()
+      .catch((error: AWSError) => {
+        task.skip(error.message)
+      })
+      .then((identities: Array<string>) => {
+        if (identities.length === 0) {
+          task.title = 'Bucket is not associated with any CloudFront distributions'
+
+          return
+        }
+
+        task.title = `Bucket is associated with ${identities.length} CloudFront distribution${identities.length === 1 ? '' : 's'}`
+      })
   }
 
   private async checkThatBucketPolicyDoesntAllowWildcardEntity(task: S3Audit.Types.ListrTask, bucket: Bucket) {
