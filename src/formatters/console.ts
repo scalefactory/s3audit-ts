@@ -166,6 +166,10 @@ export default class Console implements S3Audit.Types.Formatter {
         task.skip(error.message)
       })
       .then((identities: Array<string>) => {
+        if (identities === undefined) {
+          return
+        }
+
         if (identities.length === 0) {
           task.title = 'Bucket is not associated with any CloudFront distributions'
 
