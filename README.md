@@ -32,6 +32,13 @@ $ npm install -g s3audit
 AWS credentials will be taken from environment variables.
 It is recommended to run this in combination with [AWS Vault](https://github.com/99designs/aws-vault)
 
+### Arguments
+```
+s3audit --bucket=s3-bucket=name
+s3audit --format=console
+s3audit --format=csv
+```
+
 ### IAM Role
 
 You should use a role which is allowed these actions for all buckets in your account:
