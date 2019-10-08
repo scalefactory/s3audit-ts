@@ -34,6 +34,8 @@ It is recommended to run this in combination with [AWS Vault](https://github.com
 
 ### IAM Role
 
+You should use a role which is allowed these actions for all buckets in your account:
+
 ```
 s3:ListAllMyBuckets,
 s3:GetBucketAcl,
