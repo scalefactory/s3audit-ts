@@ -23,7 +23,7 @@ export declare module S3Audit.Types {
   }
 
   export interface Formatter {
-    run(buckets: Array<Bucket>): void
+    run(buckets: Array<Bucket>, includeChecks: Array<string>): void
   }
 
   export interface PublicAccessBlockConfiguration {
