@@ -20,7 +20,7 @@ export default class Console implements S3Audit.Types.Formatter {
         {
           title: bucket.name,
           task: () => {
-            return new Listr(this.getEnabledTasks(bucket, checks), this.listrOptions)
+            return new Listr(this.getTasksForBucket(bucket, checks), this.listrOptions)
           }
         }
       ])
@@ -164,7 +164,7 @@ export default class Console implements S3Audit.Types.Formatter {
     }
   }
 
-  private getEnabledTasks(bucket: Bucket, checks: Array<string>): Array<any> {
+  private getTasksForBucket(bucket: Bucket, checks: Array<string>): Array<any> {
     const tasks: Array<any> = []
 
     if (checks.includes('public-access-config')) {
