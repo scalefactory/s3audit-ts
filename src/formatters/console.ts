@@ -12,7 +12,7 @@ export default class Console implements S3Audit.Types.Formatter {
     concurrent: true
   }
 
-  public run(buckets: Array<Bucket>) {
+  public run(buckets: Array<Bucket>, checks: Array<string>) {
     const tasks = new Listr([], this.listrOptions)
 
     buckets.forEach(bucket => {
@@ -20,63 +20,7 @@ export default class Console implements S3Audit.Types.Formatter {
         {
           title: bucket.name,
           task: () => {
-            return new Listr([
-              {
-                title: 'Bucket public access configuration',
-                task: () =>
-                  new Listr([
-                    {
-                      title: 'BlockPublicAcls',
-                      task: (context: any, task: S3Audit.Types.ListrTask) => this.checkPublicAccesBlockFor(task, bucket, 'BlockPublicAcls')
-                    },
-                    {
-                      title: 'IgnorePublicAcls',
-                      task: (context: any, task: S3Audit.Types.ListrTask) => this.checkPublicAccesBlockFor(task, bucket, 'IgnorePublicAcls')
-                    },
-                    {
-                      title: 'BlockPublicPolicy',
-                      task: (context: any, task: S3Audit.Types.ListrTask) => this.checkPublicAccesBlockFor(task, bucket, 'BlockPublicPolicy')
-                    },
-                    {
-                      title: 'RestrictPublicBuckets',
-                      task: (context: any, task: S3Audit.Types.ListrTask) => this.checkPublicAccesBlockFor(task, bucket, 'RestrictPublicBuckets')
-                    }
-                  ], this.listrOptions)
-
-              },
-              {
-                title: 'Server side encryption is enabled',
-                task: (context: any, task: S3Audit.Types.ListrTask) => this.checkBucketEncryption(task, bucket)
-              },
-              {
-                title: 'Object versioning is enabled',
-                task: (context: any, task: S3Audit.Types.ListrTask) => this.checkBucketVersioning(task, bucket)
-              },
-              {
-                title: 'MFA Delete is enabled',
-                task: (context: any, task: S3Audit.Types.ListrTask) => this.checkMFADelete(task, bucket)
-              },
-              {
-                title: 'Static website hosting is disabled',
-                task: (context: any, task: S3Audit.Types.ListrTask) => this.checkBucketWebsite(task, bucket)
-              },
-              {
-                title: 'Bucket policy doesn\'t allow a wildcard entity',
-                task: (context: any, task: S3Audit.Types.ListrTask) => this.checkThatBucketPolicyDoesntAllowWildcardEntity(task, bucket)
-              },
-              {
-                title: 'Bucket ACL doesn\'t allow access to "Everyone" or "Any authenticated AWS user"',
-                task: (context: any, task: S3Audit.Types.ListrTask) => this.checkBucketAcl(task, bucket)
-              },
-              {
-                title: 'Logging is enabled',
-                task: (context: any, task: S3Audit.Types.ListrTask) => this.checkBucketLogging(task, bucket)
-              },
-              {
-                title: 'CloudFront Distributions',
-                task: (context: any, task: S3Audit.Types.ListrTask) => this.checkCloudFrontDistributions(task, bucket)
-              }
-            ], this.listrOptions)
+            return new Listr(this.getTasksForBucket(bucket, checks), this.listrOptions)
           }
         }
       ])
@@ -218,5 +162,93 @@ export default class Console implements S3Audit.Types.Formatter {
 
       throw new Error()
     }
+  }
+
+  private getTasksForBucket(bucket: Bucket, checks: Array<string>): Array<any> {
+    const tasks: Array<any> = []
+
+    if (checks.includes('public-access-config')) {
+      tasks.push({
+        title: 'Bucket public access configuration',
+        task: () =>
+          new Listr([
+            {
+              title: 'BlockPublicAcls',
+              task: (context: any, task: S3Audit.Types.ListrTask) => this.checkPublicAccesBlockFor(task, bucket, 'BlockPublicAcls')
+            },
+            {
+              title: 'IgnorePublicAcls',
+              task: (context: any, task: S3Audit.Types.ListrTask) => this.checkPublicAccesBlockFor(task, bucket, 'IgnorePublicAcls')
+            },
+            {
+              title: 'BlockPublicPolicy',
+              task: (context: any, task: S3Audit.Types.ListrTask) => this.checkPublicAccesBlockFor(task, bucket, 'BlockPublicPolicy')
+            },
+            {
+              title: 'RestrictPublicBuckets',
+              task: (context: any, task: S3Audit.Types.ListrTask) => this.checkPublicAccesBlockFor(task, bucket, 'RestrictPublicBuckets')
+            }
+          ], this.listrOptions)
+
+      })
+    }
+
+    if (checks.includes('sse')) {
+      tasks.push({
+        title: 'Server side encryption is enabled',
+        task: (context: any, task: S3Audit.Types.ListrTask) => this.checkBucketEncryption(task, bucket)
+      })
+    }
+
+    if (checks.includes('versioning')) {
+      tasks.push({
+        title: 'Object versioning is enabled',
+        task: (context: any, task: S3Audit.Types.ListrTask) => this.checkBucketVersioning(task, bucket)
+      })
+    }
+
+    if (checks.includes('mfa-delete')) {
+      tasks.push({
+        title: 'MFA Delete is enabled',
+        task: (context: any, task: S3Audit.Types.ListrTask) => this.checkMFADelete(task, bucket)
+      })
+    }
+
+    if (checks.includes('website')) {
+      tasks.push({
+        title: 'Static website hosting is disabled',
+        task: (context: any, task: S3Audit.Types.ListrTask) => this.checkBucketWebsite(task, bucket)
+      })
+    }
+
+    if (checks.includes('policy')) {
+      tasks.push({
+        title: 'Bucket policy doesn\'t allow a wildcard entity',
+        task: (context: any, task: S3Audit.Types.ListrTask) => this.checkThatBucketPolicyDoesntAllowWildcardEntity(task, bucket)
+      })
+    }
+
+    if (checks.includes('acl')) {
+      tasks.push({
+        title: 'Bucket ACL doesn\'t allow access to "Everyone" or "Any authenticated AWS user"',
+        task: (context: any, task: S3Audit.Types.ListrTask) => this.checkBucketAcl(task, bucket)
+      })
+    }
+
+    if (checks.includes('logging')) {
+      tasks.push({
+        title: 'Logging is enabled',
+        task: (context: any, task: S3Audit.Types.ListrTask) => this.checkBucketLogging(task, bucket)
+      })
+    }
+
+    if (checks.includes('cloudfront')) {
+      tasks.push({
+        title: 'CloudFront Distributions',
+        task: (context: any, task: S3Audit.Types.ListrTask) => this.checkCloudFrontDistributions(task, bucket)
+      })
+    }
+
+    return tasks
   }
 }

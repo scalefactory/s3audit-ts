@@ -22,35 +22,95 @@ export default class Csv implements S3Audit.Types.Formatter {
     cloudfront: 'CloudFront Origin Access Identities'
   }
 
+  private fieldsToChecks: any = {
+    BlockPublicAcls: 'public-access-config',
+    BlockPublicPolicy: 'public-access-config',
+    RestrictPublicBuckets: 'public-access-config',
+    IgnorePublicAcls: 'public-access-config',
+    sse: 'sse',
+    versioning: 'versioning',
+    mfa_delete: 'mfa-delete',
+    static_website: 'websited',
+    bucket_policy: 'policy',
+    bucket_acl: 'acl',
+    logging: 'logging',
+    cloudfront: 'cloudfront'
+  }
+
   constructor(output: any) {
     this.output = output
   }
 
-  public async run(buckets: Array<Bucket>) {
-    this.output(Object.values(this.fields).join(','))
+  public async run(buckets: Array<Bucket>, checks: Array<string>) {
+    const includeFields: Array<string> = this.getIncludedFields(checks)
+    const headings = includeFields.map((field: string) => this.fields[field])
+
+    this.output(headings.join(','))
 
     buckets.forEach(async bucket => {
       const bucketDetails: S3Audit.Types.CSVFields = {name: bucket.name}
 
-      Promise.all([
-        this.populatePublicAccessConfiguration(bucket, bucketDetails),
-        this.populateSSEField(bucket, bucketDetails),
-        this.populateLoggingField(bucket, bucketDetails),
-        this.populateVersioningField(bucket, bucketDetails),
-        this.populateStaticWebsiteField(bucket, bucketDetails),
-        this.populatePolicyField(bucket, bucketDetails),
-        this.populateACLField(bucket, bucketDetails),
-        this.populateMFADeleteField(bucket, bucketDetails),
-        this.populateCloudfrontField(bucket, bucketDetails)
-      ]).then(() => {
+      Promise.all(this.getEnabledCheckPromises(checks, bucket, bucketDetails)).then(() => {
         const output: Array<string> = []
 
-        Object.keys(this.fields).forEach((field: string) => {
+        includeFields.forEach((field: string) => {
           output.push(bucketDetails[field])
         })
 
         this.output(output.join(','))
       })
+    })
+  }
+
+  private getEnabledCheckPromises(checks: Array<string>, bucket: Bucket, bucketDetails: S3Audit.Types.CSVFields): Array<Promise<any>> {
+    const promises: Array<Promise<any>> = []
+
+    if (checks.includes('public-access-config')) {
+      promises.push(this.populatePublicAccessConfiguration(bucket, bucketDetails))
+    }
+
+    if (checks.includes('sse')) {
+      promises.push(this.populateSSEField(bucket, bucketDetails))
+    }
+
+    if (checks.includes('logging')) {
+      promises.push(this.populateLoggingField(bucket, bucketDetails))
+    }
+
+    if (checks.includes('versioning')) {
+      promises.push(this.populateVersioningField(bucket, bucketDetails))
+    }
+
+    if (checks.includes('website')) {
+      promises.push(this.populateStaticWebsiteField(bucket, bucketDetails))
+    }
+
+    if (checks.includes('policy')) {
+      promises.push(this.populatePolicyField(bucket, bucketDetails))
+    }
+
+    if (checks.includes('acl')) {
+      promises.push(this.populateACLField(bucket, bucketDetails))
+    }
+
+    if (checks.includes('mfa-delete')) {
+      promises.push(this.populateMFADeleteField(bucket, bucketDetails))
+    }
+
+    if (checks.includes('cloudfront')) {
+      promises.push(this.populateCloudfrontField(bucket, bucketDetails))
+    }
+
+    return promises
+  }
+
+  private getIncludedFields(checks: Array<string>): Array<string> {
+    return Object.keys(this.fields).filter((field: string) => {
+      if (this.fieldsToChecks[field] === undefined) {
+        return true
+      }
+
+      return checks.includes(this.fieldsToChecks[field])
     })
   }
 

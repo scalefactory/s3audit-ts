@@ -12,15 +12,43 @@ class S3Audit extends Command {
 
   static args = []
 
+  static checks = [
+    'public-access-config',
+    'versioning',
+    'sse',
+    'mfa-delete',
+    'website',
+    'policy',
+    'acl',
+    'logging',
+    'cloudfront'
+  ]
+
   static examples = [
     '$ s3audit',
     '$ s3audit --bucket=s3-bucket=name',
     '$ s3audit --format=csv',
+    '$ s3audit --enable-check=policy --enable-check=acl',
+    '$ s3audit --disable-check=logging --enable-check=logging',
   ]
 
   static flags = {
     bucket: flags.string({
       description: 'The name of a bucket to target'
+    }),
+
+    'disable-check': flags.string({
+      char: 'd',
+      exclusive: ['enable-check'],
+      multiple: true,
+      options: S3Audit.checks
+    }),
+
+    'enable-check': flags.string({
+      char: 'e',
+      exclusive: ['disable-check'],
+      multiple: true,
+      options: S3Audit.checks
     }),
 
     format: flags.string({
@@ -39,9 +67,10 @@ class S3Audit extends Command {
     const {flags} = this.parse(S3Audit)
     const buckets: Bucket[] = []
     const format: string = flags.format
+    const includeChecks: string[] = this.determineChecksToRun(flags)
 
     if (flags.bucket) {
-      return this.auditBuckets(format, [new Bucket(flags.bucket)])
+      return this.auditBuckets(format, [new Bucket(flags.bucket)], includeChecks)
     }
 
     new S3().listBuckets((error: AWSError, data?: S3.Types.ListBucketsOutput) => {
@@ -55,11 +84,11 @@ class S3Audit extends Command {
         }
       })
 
-      this.auditBuckets(format, buckets)
+      this.auditBuckets(format, buckets, includeChecks)
     })
   }
 
-  private auditBuckets(format: string, buckets: Array<Bucket>) {
+  private auditBuckets(format: string, buckets: Array<Bucket>, includeChecks: Array<string>) {
     let formatter: S3Audit.Types.Formatter
 
     switch (format) {
@@ -73,7 +102,21 @@ class S3Audit extends Command {
       formatter = new ConsoleFormatter()
     }
 
-    formatter.run(buckets)
+    formatter.run(buckets, includeChecks)
+  }
+
+  private determineChecksToRun(flags: any): Array<string> {
+    let checks: string[] = S3Audit.checks
+
+    if (flags['enable-check']) {
+      checks = flags['enable-check']
+    }
+
+    if (flags['disable-check']) {
+      checks = checks.filter((check: string) => flags['disable-check'].indexOf(check) === -1)
+    }
+
+    return checks
   }
 }
 
