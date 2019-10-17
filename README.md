@@ -37,6 +37,8 @@ It is recommended to run this in combination with [AWS Vault](https://github.com
 s3audit --bucket=s3-bucket=name
 s3audit --format=console
 s3audit --format=csv
+s3audit --enable-check=policy --enable-check=acl
+s3audit --disable-check=logging --enable-check=logging
 ```
 
 ### IAM Role

@@ -28,6 +28,8 @@ class S3Audit extends Command {
     '$ s3audit',
     '$ s3audit --bucket=s3-bucket=name',
     '$ s3audit --format=csv',
+    '$ s3audit --enable-check=policy --enable-check=acl',
+    '$ s3audit --disable-check=logging --enable-check=logging',
   ]
 
   static flags = {
