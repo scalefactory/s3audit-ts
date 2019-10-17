@@ -115,7 +115,7 @@ export default class Csv implements S3Audit.Types.Formatter {
     return new Promise(resolve => {
       bucket.hasStaticWebsiteHosting()
         .then((isEnabled: boolean) => {
-          bucketDetails.static_website = isEnabled
+          bucketDetails.static_website = !isEnabled
         })
         .catch((error: AWSError) => {
           bucketDetails.static_website = error.message
