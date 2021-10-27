@@ -1,11 +1,11 @@
-s3audit
+s3audit-ts
 ==================
 
 This is an open source project published by The Scale Factory.
 
-We currently consider this project to be hibernating.
+We currently consider this project to be hibernating. For our replacement (implemented in Rust), see [`s3audit-rs`](https://github.com/scalefactory/s3audit-rs).
 
-These are projects that we’re no longer prioritising, but which we keep ticking over for the benefit of the few customers we support who still use them.
+As a hibernated project, that means we’re no longer prioritising it, we are currently doing minimal maintenance for the benefit of the few customers we support who still use them.
 
 :information_source: We’re not regularly patching these projects, or actively watching for issues or PRs. We’ll periodically make updates or respond to contributions if one of the team has some spare time to invest.
 
@@ -20,11 +20,11 @@ Checks the settings for all S3 buckets in an AWS account for public access
 <!-- tocstop -->
 
 For an introduction, read
-[Securing S3 buckets with s3audit](https://medium.com/the-scale-factory/securing-s3-buckets-with-s3audit-a8cb989cb861)
+[Securing S3 buckets with s3audit](https://scalefactory.com/blog/2019/10/03/securing-s3-buckets-with-s3audit/)
 
 # Install
 <!-- install -->
-Download and install the [latest release from GitHub](https://github.com/scalefactory/s3audit/releases)
+Download and install the [latest release from GitHub](https://github.com/scalefactory/s3audit-ts/releases)
 
 Or install the NPM package:
 
