@@ -1,18 +1,18 @@
 s3audit-ts
 ==================
 
-This is an open source project published by The Scale Factory.
+This is an archived an open source project published by [The Scale Factory](https://scalefactory.com).
 
-We currently consider this project to be hibernating. For our replacement (implemented in Rust), see [`s3audit-rs`](https://github.com/scalefactory/s3audit-rs).
+For our replacement (implemented in Rust), see [`s3audit-rs`](https://github.com/scalefactory/s3audit-rs).
 
-As a hibernated project, that means we’re no longer prioritising it, we are currently doing minimal maintenance for the benefit of the few customers we support who still use them.
-
-:information_source: We’re not regularly patching these projects, or actively watching for issues or PRs. We’ll periodically make updates or respond to contributions if one of the team has some spare time to invest.
+## Purpose
 
 Checks the settings for all S3 buckets in an AWS account for public access
 
 [![oclif](https://img.shields.io/badge/cli-oclif-brightgreen.svg)](https://oclif.io)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+
+## Table of contents
 
 <!-- toc -->
 * [Install](#install)
